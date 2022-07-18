@@ -88,7 +88,7 @@ fn _draw_button(b: &mut Button) {
     let (b_x, b_y, b_w, b_h) = (b.x(), b.y(), b.w(), b.h());
 
     let (frame_color, bg_color, text_color) = match b.has_visible_focus() {
-        true => (C_DDLC_PINK_ACT, C_DDLC_WHITE_ACT, C_PEACH),
+        true => (C_DDLC_PINK_ACT, C_DDLC_WHITE_ACT, C_DDLC_PEACH),
         false => (C_DDLC_PINK_IDLE, C_DDLC_WHITE_IDLE, C_BLACK)
     };
 

@@ -23,7 +23,7 @@ pub const BUT_PADDING: i32 = 3;
 // Color constants
 // pub const C_WHITE: Color = Color::White;
 pub const C_BLACK: Color = Color::Black;
-pub const C_PEACH: Color = Color::from_hex(0xffaa99);
+pub const C_DDLC_PEACH: Color = Color::from_hex(0xffaa99);
 pub const C_DDLC_WHITE_IDLE: Color = Color::from_hex(0xffe6f4);
 pub const C_DDLC_PINK_IDLE: Color = Color::from_hex(0xffbde1);
 pub const C_DDLC_PINK_DARK: Color = Color::from_hex(0xbb5599);
