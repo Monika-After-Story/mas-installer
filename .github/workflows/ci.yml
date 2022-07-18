@@ -20,12 +20,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install deps
-        run: sudo apt-get update && sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
+      - name: Install dependencies
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update && sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
+          fi
 
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - uses: actions/cache@v3
+      - name: Check cache
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -35,10 +40,10 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Check
+      - name: Cargo check
         run: |
           cargo check --verbose
 
-      - name: Test
+      - name: Cargo test
         run: |
           cargo test --verbose
