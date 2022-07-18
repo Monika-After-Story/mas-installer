@@ -1,5 +1,4 @@
 // #![allow(dead_code, unused_imports, unused_mut, unused_variables)]// TODO: remove me
-mod structs;
 mod app_styles;
 mod builder;
 mod utils;
