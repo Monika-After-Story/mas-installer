@@ -7,7 +7,10 @@ mod utils;
 // Include the icon
 static APP_ICON_DATA: &'static [u8] = include_bytes!("static/icon.png");
 // Include license
+#[cfg(not(debug_assertions))]
 static APP_LICENSE: &'static str = include_str!("static/license.md");
+#[cfg(debug_assertions)]
+static APP_LICENSE: &'static str = "Hello, World!";
 
 
 use fltk::{
