@@ -42,8 +42,8 @@ jobs:
 
       - name: Cargo check
         run: |
-          cargo check --verbose
+          cargo check --verbose --no-default-features
 
       - name: Cargo test
         run: |
-          cargo test --verbose
+          cargo test --verbose --no-default-features
