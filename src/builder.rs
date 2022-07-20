@@ -6,14 +6,25 @@ use fltk::{
     button::Button,
     draw,
     enums::{
+        Align,
         Event,
-        Font
+        FrameType,
+        LabelType
+    },
+    frame::Frame,
+    group::{
+        Pack,
+        PackType
+    },
+    text::{
+        TextBuffer,
+        TextDisplay
     },
     prelude::{
         WidgetExt,
         WindowExt,
         GroupExt,
-        WidgetBase
+        WidgetBase, DisplayExt
     },
     window::{
         Window,
@@ -23,7 +34,9 @@ use fltk::{
 
 use crate::{
     app_styles::*,
-    Message
+    // utils::*,
+    Message,
+    APP_LICENSE
 };
 
 
@@ -34,7 +47,7 @@ pub fn build_app() -> App {
 
 
 /// Builds a main window
-pub fn build_main_win() -> DoubleWindow {
+pub fn build_outer_win() -> DoubleWindow {
     let mut main_win = Window::default()
         .with_size(WIN_WIDTH, WIN_HEIGHT)
         .with_label(WIN_TITLE)
@@ -58,6 +71,7 @@ pub fn build_inner_win() -> DoubleWindow {
     inner_win.set_color(C_DDLC_WHITE_IDLE);
 
     inner_win.end();
+    inner_win.hide();
 
     return inner_win
 }
@@ -67,7 +81,7 @@ pub fn build_inner_win() -> DoubleWindow {
 /// Allows to handle hover events
 fn _handle_button(b: &mut Button, ev: Event) -> bool {
     return match ev {
-        Event::Enter => {
+        Event::Enter | Event::Focus => {
             b.visible_focus(true);
             b.redraw();
             true
@@ -76,6 +90,11 @@ fn _handle_button(b: &mut Button, ev: Event) -> bool {
             b.visible_focus(false);
             b.redraw();
             true
+        },
+        Event::Hide => {
+            b.visible_focus(false);
+            // don't want to mark this as handled
+            false
         },
         // For all unhandled events we must return false
         _ => false
@@ -95,7 +114,7 @@ fn _draw_button(b: &mut Button) {
     draw::draw_rect_fill(b_x, b_y, b_w, b_h, frame_color);
     draw::draw_rect_fill(b_x+BUT_PADDING, b_y+BUT_PADDING, b_w-BUT_PADDING*2, b_h-BUT_PADDING*2, bg_color);
     draw::set_draw_color(text_color);// for the text
-    draw::set_font(Font::HelveticaBold, 18);
+    draw::set_font(BUT_FONT, BUT_FONT_SIZE);
     draw::draw_text2(&b.label(), b_x, b_y, b_w, b_h, b.align());
     b.redraw();
 }
@@ -112,4 +131,136 @@ pub fn build_button(label: &str, sender: Sender<Message>, msg: Message) -> Butto
     but.handle(_handle_button);
     but.draw(_draw_button);
     return but
+}
+
+
+fn _build_frame(xpos: i32, ypos: i32) -> Frame {
+    let frame = Frame::default()
+        .with_size(WIN_WIDTH-WIN_PADDING*2-xpos, WIN_HEIGHT-WIN_PADDING*2-ypos)
+        .with_pos(xpos, ypos);
+        // .with_align(Align::Top | Align::Inside)
+        // .with_label(label);
+
+    return frame
+}
+
+fn _build_top_frame(label: &str) -> Frame {
+    let mut frame = _build_frame(TOP_FRAME_XPOS, TOP_FRAME_YPOS);
+    // frame.set_frame(FrameType::FlatBox);
+    // frame.set_color(C_BLACK);
+    frame.set_align(Align::Top | Align::Inside);
+    frame.set_label(label);
+    frame.set_label_color(C_DDLC_PINK_DARK);
+    // frame.set_label_type(LabelType::Normal);
+    frame.set_label_size(TOP_FRAME_LABEL_SIZE);
+
+    return frame
+}
+
+
+fn _build_welcome_win_pack() -> Pack {
+    const TOTAL_ITEMS: i32 = 2;
+    const PAD_X: i32 = 50;
+    let pad_y: i32 = WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT-25;//mul_int_float(WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT, 0.9);
+
+    let mut pack = Pack::default()
+        .with_size(WIN_WIDTH-WIN_PADDING*2-PAD_X*2, BUT_HEIGHT)
+        .with_pos(PAD_X, pad_y)
+        .with_align(Align::Center)
+        .with_type(PackType::Horizontal);
+
+    pack.set_spacing(WIN_WIDTH-WIN_PADDING*2 - BUT_WIDTH*TOTAL_ITEMS - PAD_X*2);
+
+    pack.end();
+
+    return pack
+}
+
+pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
+    let mut welcome_win = build_inner_win();
+    welcome_win.show();
+    welcome_win.begin();
+
+    _build_top_frame(WELCOME_FRAME_LABEL);
+
+    let welcome_but_pack = _build_welcome_win_pack();
+    welcome_but_pack.begin();
+
+    build_button("Abort", sender, Message::Close);
+    build_button(" Continue@>", sender, Message::NextPage);
+
+    welcome_but_pack.end();
+
+    welcome_win.end();
+
+    return welcome_win
+}
+
+
+fn _build_license_win_inner_pack() -> Pack {
+    const TOTAL_ITEMS: i32 = 2;
+
+    let mut inner_pack = Pack::default()
+        .with_size(BUT_WIDTH*TOTAL_ITEMS + 5, BUT_HEIGHT)
+        .with_align(Align::Center)
+        .with_type(PackType::Horizontal);
+
+    inner_pack.set_spacing(5);
+
+    inner_pack.end();
+
+    return inner_pack
+}
+
+fn _build_license_win_outer_pack(spacing: i32) -> Pack {
+    const PAD_X: i32 = 50;
+    let pad_y: i32 = WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT-25;//mul_int_float(WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT, 0.9);
+
+    let mut pack = Pack::default()
+        .with_size(WIN_WIDTH-WIN_PADDING*2-PAD_X*2, BUT_HEIGHT)
+        .with_pos(PAD_X, pad_y)
+        .with_align(Align::Center)
+        .with_type(PackType::Horizontal);
+
+    pack.set_spacing(WIN_WIDTH-WIN_PADDING*2 - BUT_WIDTH - spacing - PAD_X*2);
+
+    pack.end();
+
+    return pack
+}
+
+pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
+    let license_win = build_inner_win();
+    license_win.begin();
+
+
+    _build_top_frame(LICENSE_FRAME_LABEL);
+
+    let mut buf = TextBuffer::default();
+    buf.set_text(APP_LICENSE);
+
+    let mut txt = TextDisplay::default()
+        .with_size(WIN_WIDTH-WIN_PADDING*2, 310)
+        .with_pos(0, 100);
+
+    txt.set_buffer(buf);
+
+    let inner_pack = _build_license_win_inner_pack();
+
+    inner_pack.begin();
+    build_button("@< Back ", sender, Message::PrevPage);
+    build_button(" Continue@>", sender, Message::NextPage);
+    inner_pack.end();
+
+    let mut outer_pack = _build_license_win_outer_pack(inner_pack.w());
+
+    outer_pack.begin();
+    build_button("Abort", sender, Message::Close);
+    outer_pack.add(&inner_pack);
+    outer_pack.end();
+
+
+    license_win.end();
+
+    return license_win
 }

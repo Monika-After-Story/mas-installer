@@ -14,9 +14,9 @@ use crate::APP_ICON_DATA;
 
 /// Multiplies int by float and returns int
 /// Useful to position widgets relatively of the windows size
-pub fn mul_int_float(a: i32, b: f32) -> i32 {
-    return (a as f32 * b) as i32
-}
+// pub fn mul_int_float(a: i32, b: f32) -> i32 {
+//     return (a as f32 * b) as i32
+// }
 
 
 /// Changes current active windows by hiding one window and showing another
