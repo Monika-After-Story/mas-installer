@@ -8,3 +8,8 @@ edition = "2021"
 [dependencies]
 fltk = "=1.3.11"
 zip = "=0.6.2"
+
+[features]
+default = ["compile_static"]
+
+compile_static = []
