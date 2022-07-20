@@ -12,4 +12,6 @@ zip = "=0.6.2"
 [features]
 default = ["compile_static"]
 
-compile_static = []
+compile_icon = []
+compile_license = []
+compile_static = ["compile_icon", "compile_license"]

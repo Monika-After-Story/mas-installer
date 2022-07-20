@@ -5,14 +5,14 @@ mod utils;
 
 
 // Include the icon
-#[cfg(feature="compile_static")]
+#[cfg(feature="compile_icon")]
 static APP_ICON_DATA: &'static [u8] = include_bytes!("static/icon.png");
-#[cfg(not(feature="compile_static"))]
+#[cfg(not(feature="compile_icon"))]
 static APP_ICON_DATA: &'static [u8] = b"";
 // Include license
-#[cfg(feature="compile_static")]
+#[cfg(feature="compile_license")]
 static APP_LICENSE: &'static str = include_str!("static/license.md");
-#[cfg(not(feature="compile_static"))]
+#[cfg(not(feature="compile_license"))]
 static APP_LICENSE: &'static str = "Hello, World!";
 
 
