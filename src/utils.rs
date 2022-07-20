@@ -1,7 +1,17 @@
+use std::{
+    env,
+    path::PathBuf
+};
+
 use fltk::{
     image,
-    enums::Event,
     app::add_handler,
+    dialog::{
+        NativeFileChooser,
+        NativeFileChooserType,
+        // NativeFileChooserOptions
+    },
+    enums::Event,
     window::DoubleWindow,
     prelude::{
         WidgetExt,
@@ -47,4 +57,26 @@ pub fn disable_global_hotkeys() {
             }
         }
     );
+}
+
+/// Returns current working dir
+pub fn get_cwd() -> PathBuf {
+    let cwd = env::current_dir();
+    return cwd.ok().unwrap_or_default()
+}
+
+pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
+    let mut c = NativeFileChooser::new(NativeFileChooserType::BrowseDir);
+
+    c.set_title(prompt);
+
+    let cwd = get_cwd();
+    match c.set_directory(&cwd) {
+        Err(err) => eprintln!("Failed to automatically set default dir: {err}"),
+        Ok(_) => {}
+    }
+
+    c.show();
+
+    return c.filename()
 }

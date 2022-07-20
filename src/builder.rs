@@ -8,8 +8,8 @@ use fltk::{
     enums::{
         Align,
         Event,
-        FrameType,
-        LabelType
+        // FrameType,
+        // LabelType
     },
     frame::Frame,
     group::{
@@ -18,7 +18,8 @@ use fltk::{
     },
     text::{
         TextBuffer,
-        TextDisplay
+        TextDisplay,
+        WrapMode
     },
     prelude::{
         WidgetExt,
@@ -46,13 +47,14 @@ pub fn build_app() -> App {
 }
 
 
-/// Builds a main window
+/// Builds an outer window
+/// This is the main window of the app
+/// Other windows get included into this
 pub fn build_outer_win() -> DoubleWindow {
     let mut main_win = Window::default()
         .with_size(WIN_WIDTH, WIN_HEIGHT)
         .with_label(WIN_TITLE)
         .center_screen();
-
     main_win.set_color(C_DDLC_PINK_IDLE);
 
     main_win.end();
@@ -67,7 +69,6 @@ pub fn build_inner_win() -> DoubleWindow {
     let mut inner_win = Window::default()
         .with_size(WIN_WIDTH - WIN_PADDING*2, WIN_HEIGHT - WIN_PADDING*2)
         .with_pos(WIN_PADDING, WIN_PADDING);
-
     inner_win.set_color(C_DDLC_WHITE_IDLE);
 
     inner_win.end();
@@ -119,21 +120,44 @@ fn _draw_button(b: &mut Button) {
     b.redraw();
 }
 
-/// Builds a button with the given label, sender, and msg
-/// The button won't be automatically position
-pub fn build_button(label: &str, sender: Sender<Message>, msg: Message) -> Button {
+fn _build_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message) -> Button {
     let mut but = Button::default()
-        .with_size(BUT_WIDTH, BUT_HEIGHT)
+        .with_size(width, height)
         .with_label(label);
 
     but.visible_focus(false);
     but.emit(sender, msg);
     but.handle(_handle_button);
     but.draw(_draw_button);
+
     return but
 }
 
+/// Builds a button with the given label, sender, and msg
+/// The button won't be automatically position
+pub fn build_button(label: &str, sender: Sender<Message>, msg: Message) -> Button {
+    let but = _build_button(
+        BUT_WIDTH,
+        BUT_HEIGHT,
+        label,
+        sender,
+        msg
+    );
+    return but
+}
 
+pub fn build_sel_dir_button(label: &str, sender: Sender<Message>, msg: Message) -> Button {
+    return _build_button(
+        BUT_SEL_DIR_WIDTH,
+        BUT_SEL_DIR_HEIGHT,
+        label,
+        sender,
+        msg
+    )
+}
+
+
+/// Builds a frame at the given position
 fn _build_frame(xpos: i32, ypos: i32) -> Frame {
     let frame = Frame::default()
         .with_size(WIN_WIDTH-WIN_PADDING*2-xpos, WIN_HEIGHT-WIN_PADDING*2-ypos)
@@ -144,6 +168,7 @@ fn _build_frame(xpos: i32, ypos: i32) -> Frame {
     return frame
 }
 
+/// Builds a frame at the top with the given label
 fn _build_top_frame(label: &str) -> Frame {
     let mut frame = _build_frame(TOP_FRAME_XPOS, TOP_FRAME_YPOS);
     // frame.set_frame(FrameType::FlatBox);
@@ -168,7 +193,6 @@ fn _build_welcome_win_pack() -> Pack {
         .with_pos(PAD_X, pad_y)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-
     pack.set_spacing(WIN_WIDTH-WIN_PADDING*2 - BUT_WIDTH*TOTAL_ITEMS - PAD_X*2);
 
     pack.end();
@@ -176,6 +200,7 @@ fn _build_welcome_win_pack() -> Pack {
     return pack
 }
 
+/// Builds the welcome windows
 pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
     let mut welcome_win = build_inner_win();
     welcome_win.show();
@@ -186,8 +211,8 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
     let welcome_but_pack = _build_welcome_win_pack();
     welcome_but_pack.begin();
 
-    build_button("Abort", sender, Message::Close);
-    build_button(" Continue@>", sender, Message::NextPage);
+    build_button(BUT_ABORT_LABEL, sender, Message::Close);
+    build_button(BUT_CONTINUE_LABEL, sender, Message::NextPage);
 
     welcome_but_pack.end();
 
@@ -204,7 +229,6 @@ fn _build_license_win_inner_pack() -> Pack {
         .with_size(BUT_WIDTH*TOTAL_ITEMS + 5, BUT_HEIGHT)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-
     inner_pack.set_spacing(5);
 
     inner_pack.end();
@@ -221,7 +245,6 @@ fn _build_license_win_outer_pack(spacing: i32) -> Pack {
         .with_pos(PAD_X, pad_y)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-
     pack.set_spacing(WIN_WIDTH-WIN_PADDING*2 - BUT_WIDTH - spacing - PAD_X*2);
 
     pack.end();
@@ -229,6 +252,23 @@ fn _build_license_win_outer_pack(spacing: i32) -> Pack {
     return pack
 }
 
+fn _build_ternary_but_pack(sender: Sender<Message>) {
+    let inner_pack = _build_license_win_inner_pack();
+
+    inner_pack.begin();
+    build_button(BUT_BACK_LABEL, sender, Message::PrevPage);
+    build_button(BUT_CONTINUE_LABEL, sender, Message::NextPage);
+    inner_pack.end();
+
+    let mut outer_pack = _build_license_win_outer_pack(inner_pack.w());
+
+    outer_pack.begin();
+    build_button(BUT_ABORT_LABEL, sender, Message::Close);
+    outer_pack.add(&inner_pack);
+    outer_pack.end();
+}
+
+/// Builds the license window
 pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     let license_win = build_inner_win();
     license_win.begin();
@@ -242,25 +282,46 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     let mut txt = TextDisplay::default()
         .with_size(WIN_WIDTH-WIN_PADDING*2, 310)
         .with_pos(0, 100);
-
     txt.set_buffer(buf);
 
-    let inner_pack = _build_license_win_inner_pack();
-
-    inner_pack.begin();
-    build_button("@< Back ", sender, Message::PrevPage);
-    build_button(" Continue@>", sender, Message::NextPage);
-    inner_pack.end();
-
-    let mut outer_pack = _build_license_win_outer_pack(inner_pack.w());
-
-    outer_pack.begin();
-    build_button("Abort", sender, Message::Close);
-    outer_pack.add(&inner_pack);
-    outer_pack.end();
+    _build_ternary_but_pack(sender);
 
 
     license_win.end();
 
     return license_win
+}
+
+
+/// Builds the select directory window
+pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> DoubleWindow {
+    let select_dir_win = build_inner_win();
+    select_dir_win.begin();
+
+
+    _build_top_frame(SELECT_DIR_FRAME_LABEL);
+
+    let mut pack = Pack::default()
+        .with_size(WIN_WIDTH-WIN_PADDING*2, SEL_DIR_TXT_HEIGHT)
+        .with_align(Align::Center)
+        .with_type(PackType::Horizontal);
+    pack = pack.center_of_parent();
+    pack.begin();
+
+    let mut txt = TextDisplay::default()
+        .with_size(WIN_WIDTH-WIN_PADDING*2-BUT_SEL_DIR_WIDTH, SEL_DIR_TXT_HEIGHT);
+    txt.set_text_size(SEL_DIR_TXT_SIZE);
+    txt.wrap_mode(WrapMode::None, 0);
+    txt.set_buffer(txt_buf);
+
+    build_sel_dir_button(BUT_SELECT_DIR_LABEL, sender, Message::SelectDir);
+
+    pack.end();
+
+    _build_ternary_but_pack(sender);
+
+
+    select_dir_win.end();
+
+    return select_dir_win
 }

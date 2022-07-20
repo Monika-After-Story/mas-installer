@@ -16,6 +16,8 @@ static APP_LICENSE: &'static str = include_str!("static/license.md");
 static APP_LICENSE: &'static str = "Hello, World!";
 
 
+// use std::path::PathBuf;
+
 use fltk::{
     app::{
         channel,
@@ -26,6 +28,7 @@ use fltk::{
     // enums::{
     //     LabelType
     // },
+    text::TextBuffer,
     prelude::{
         WidgetExt,
         GroupExt,
@@ -41,18 +44,21 @@ use fltk::{
 pub enum Message {
     Close,
     NextPage,
-    PrevPage
+    PrevPage,
+    SelectDir
 }
 
 
 /// The entry point
 fn main() {
-    // use app_styles::*;
     utils::disable_global_hotkeys();
 
-    let app = builder::build_app();
     let (sender, receiver): (Sender<Message>, Receiver<Message>) = channel();
+    let mut extraction_dir = utils::get_cwd();
+    let mut path_txt_buf = TextBuffer::default();
+    path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
 
+    let app = builder::build_app();
 
     let mut main_win = builder::build_outer_win();
     utils::load_icon(&mut main_win);
@@ -60,9 +66,8 @@ fn main() {
 
 
     let welcome_win = builder::build_welcome_win(sender);
-
     let license_win = builder::build_license_win(sender);
-
+    let dir_sel_win = builder::build_select_dir_win(sender, path_txt_buf.clone());
 
 
     main_win.end();
@@ -70,17 +75,12 @@ fn main() {
     let mut current_win_id: usize = 0;
     let mut windows: Vec<DoubleWindow> = vec![
         welcome_win,
-        license_win
+        license_win,
+        dir_sel_win
     ];
-
 
     main_win.show();
 
-
-    // match app.run() {
-    //     Ok(_) => println!("Shuting down the app"),
-    //     Err(err) => eprintln!("Crash during even loop: {}", err)
-    // }
     while app.wait() {
         if let Some(msg) = receiver.recv() {
             match msg {
@@ -88,13 +88,15 @@ fn main() {
                 Message::NextPage => {
                     let new_id = current_win_id+1;
                     utils::switch_win(&mut windows, &mut current_win_id, new_id);
-                    // println!("Opened next page");
                 },
                 Message::PrevPage => {
                     let new_id = current_win_id-1;
                     utils::switch_win(&mut windows, &mut current_win_id, new_id);
-                    // println!("Opened previous page");
                 },
+                Message::SelectDir => {
+                    extraction_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
+                    path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
+                }
             }
         }
     }
