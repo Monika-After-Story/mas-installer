@@ -3,11 +3,17 @@ use fltk::{
         App,
         Sender
     },
-    button::Button,
+    button::{
+        // ButtonType,
+        Button,
+        CheckButton
+    },
     draw,
     enums::{
         Align,
+        Color,
         Event,
+        FrameType,
         // FrameType,
         // LabelType
     },
@@ -25,7 +31,9 @@ use fltk::{
         WidgetExt,
         WindowExt,
         GroupExt,
-        WidgetBase, DisplayExt
+        WidgetBase,
+        // ButtonExt,
+        DisplayExt, ButtonExt
     },
     window::{
         Window,
@@ -80,7 +88,8 @@ pub fn build_inner_win() -> DoubleWindow {
 
 /// Callback for handling buttons events.
 /// Allows to handle hover events
-fn _handle_button(b: &mut Button, ev: Event) -> bool {
+/// THIS IS GENERIC VERSION
+fn __handle_button_widget(b: &mut dyn WidgetExt, ev: Event) -> bool {
     return match ev {
         Event::Enter | Event::Focus => {
             b.visible_focus(true);
@@ -102,9 +111,17 @@ fn _handle_button(b: &mut Button, ev: Event) -> bool {
     }
 }
 
+/// Callback for handling buttons events.
+/// Allows to handle hover events
+/// This is a Button version
+fn _handle_button(b: &mut Button, ev: Event) -> bool {
+    return __handle_button_widget(b, ev)
+}
+
 /// Callback for handling how the button is being drawn.
 /// Allows to style it
-fn _draw_button(b: &mut Button) {
+/// THIS IS GENERIC VERSION
+fn __draw_button_widget(b: &mut dyn WidgetExt) {
     let (b_x, b_y, b_w, b_h) = (b.x(), b.y(), b.w(), b.h());
 
     let (frame_color, bg_color, text_color) = match b.has_visible_focus() {
@@ -118,6 +135,12 @@ fn _draw_button(b: &mut Button) {
     draw::set_font(BUT_FONT, BUT_FONT_SIZE);
     draw::draw_text2(&b.label(), b_x, b_y, b_w, b_h, b.align());
     b.redraw();
+}
+
+/// Callback for handling how the button is being drawn.
+/// This is a Button version
+fn _draw_button(b: &mut Button) {
+    __draw_button_widget(b);
 }
 
 fn _build_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message) -> Button {
@@ -146,6 +169,7 @@ pub fn build_button(label: &str, sender: Sender<Message>, msg: Message) -> Butto
     return but
 }
 
+/// Builds a select directory dialogue button
 pub fn build_sel_dir_button(label: &str, sender: Sender<Message>, msg: Message) -> Button {
     return _build_button(
         BUT_SEL_DIR_WIDTH,
@@ -155,6 +179,79 @@ pub fn build_sel_dir_button(label: &str, sender: Sender<Message>, msg: Message) 
         msg
     )
 }
+
+
+/// Callback for handling buttons events.
+/// Allows to handle hover events
+/// This is a CheckButton version
+fn _handle_check_button(b: &mut CheckButton, ev: Event) -> bool {
+    return __handle_button_widget(b, ev)
+}
+
+/// Callback for handling how the button is being drawn.
+/// This is a version for Button
+fn _draw_check_button(b: &mut CheckButton) {
+    let (b_x, b_y, b_w, b_h) = (b.x(), b.y(), b.w(), b.h());
+
+    let bg_color: Color;
+    let txt_color: Color;
+    if b.is_checked() {
+        bg_color = C_DDLC_PINK_DARK;
+        txt_color = C_DDLC_PEACH;
+    }
+    else if b.has_visible_focus() {
+        bg_color = C_DDLC_WHITE_ACT;
+        txt_color = C_BLACK;
+    }
+    else {
+        bg_color = C_DDLC_WHITE_IDLE;
+        txt_color = C_BLACK;
+    }
+
+    draw::draw_rect_fill(b_x, b_y, b_w, b_h, bg_color);
+
+    let pad_outer = 3;
+    draw::draw_rect_with_color(b_x+pad_outer, b_y+pad_outer, b_h-pad_outer*2, b_h-pad_outer*2, C_BLACK);
+    if b.is_checked() {
+        let pad_inner = pad_outer + 3;
+        draw::draw_rect_fill(b_x+pad_inner, b_y+pad_inner, b_h-pad_inner*2, b_h-pad_inner*2, C_DDLC_PEACH);
+        draw::draw_rect_with_color(b_x+pad_inner, b_y+pad_inner, b_h-pad_inner*2, b_h-pad_inner*2, C_BLACK);
+    }
+
+    draw::set_draw_color(txt_color);
+    draw::set_font(BUT_FONT, BUT_FONT_SIZE);
+    draw::draw_text2(&b.label(), b_x+b_h, b_y, b_w, b_h, b.align());
+
+    b.redraw();
+}
+
+/// Builds a check button with the given parameters
+fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message) -> CheckButton {
+    let mut but = CheckButton::default()
+        .with_size(width, height)
+        .with_label(label);
+
+    but.visible_focus(false);
+    but.emit(sender, msg);
+    but.handle(_handle_check_button);
+    but.draw(_draw_check_button);
+    but.set_frame(FrameType::NoBox);
+    but.set_down_frame(FrameType::NoBox);
+
+    return but
+}
+
+// pub fn build_check_button(label: &str, sender: Sender<Message>, msg: Message) -> CheckButton {
+//     let but = _build_check_button(
+//         BUT_WIDTH,
+//         BUT_HEIGHT,
+//         label,
+//         sender,
+//         msg
+//     );
+
+//     return but
+// }
 
 
 /// Builds a frame at the given position
@@ -324,4 +421,32 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
     select_dir_win.end();
 
     return select_dir_win
+}
+
+
+/// Builds options windows with various settings for installer
+pub fn build_options_win(sender: Sender<Message>) -> DoubleWindow {
+    let options_win = build_inner_win();
+    options_win.begin();
+
+
+    _build_top_frame(OPTIONS_FRAME_LABEL);
+
+
+    const BUT_INST_SPR_WIDTH: i32 = BUT_WIDTH+45;
+    const TOTAL_BUTS: i32 = 1;
+    const XPOS: i32 = (WIN_WIDTH-WIN_PADDING*2)/2 - BUT_INST_SPR_WIDTH/2;
+    const YPOS: i32 = (WIN_HEIGHT-WIN_PADDING*2)/2 - TOTAL_BUTS*BUT_HEIGHT/2;
+
+    let mut inst_spr_but = _build_check_button(BUT_INST_SPR_WIDTH, BUT_HEIGHT, BUT_INSTALL_SPRITEPACKS_LABEL, sender, Message::InstallSpritepacks);
+    inst_spr_but.set_checked(true);
+    inst_spr_but.set_pos(XPOS, YPOS);
+
+
+    _build_ternary_but_pack(sender);
+
+
+    options_win.end();
+
+    return options_win
 }

@@ -45,7 +45,8 @@ pub enum Message {
     Close,
     NextPage,
     PrevPage,
-    SelectDir
+    SelectDir,
+    InstallSpritepacks
 }
 
 
@@ -54,6 +55,7 @@ fn main() {
     utils::disable_global_hotkeys();
 
     let (sender, receiver): (Sender<Message>, Receiver<Message>) = channel();
+    let mut is_deluxe_version: bool = true;
     let mut extraction_dir = utils::get_cwd();
     let mut path_txt_buf = TextBuffer::default();
     path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
@@ -68,6 +70,7 @@ fn main() {
     let welcome_win = builder::build_welcome_win(sender);
     let license_win = builder::build_license_win(sender);
     let dir_sel_win = builder::build_select_dir_win(sender, path_txt_buf.clone());
+    let options_win = builder::build_options_win(sender);
 
 
     main_win.end();
@@ -76,7 +79,8 @@ fn main() {
     let mut windows: Vec<DoubleWindow> = vec![
         welcome_win,
         license_win,
-        dir_sel_win
+        dir_sel_win,
+        options_win
     ];
 
     main_win.show();
@@ -96,6 +100,10 @@ fn main() {
                 Message::SelectDir => {
                     extraction_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
                     path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
+                }
+                Message::InstallSpritepacks => {
+                    is_deluxe_version = !is_deluxe_version;
+                    println!("is deluxe: {:?}", is_deluxe_version);
                 }
             }
         }

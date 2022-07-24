@@ -65,6 +65,8 @@ pub fn get_cwd() -> PathBuf {
     return cwd.ok().unwrap_or_default()
 }
 
+/// Launches select directory dialogue native to the target OS
+/// returns selected directory, defaults to current working directory
 pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
     let mut c = NativeFileChooser::new(NativeFileChooserType::BrowseDir);
 
