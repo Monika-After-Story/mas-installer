@@ -547,6 +547,7 @@ version = "0.0.1"
 dependencies = [
  "fltk",
  "reqwest",
+ "serde_json",
  "zip",
 ]
 
