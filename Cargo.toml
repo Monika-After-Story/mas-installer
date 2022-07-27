@@ -1,6 +1,9 @@
 [package]
 name = "mas-installer"
 version = "0.0.1"
+authors = ["Booplicate"]
+description = "Custom cross-platform installer for Monika After Story"
+repository = "https://github.com/Monika-After-Story/mas-installer/"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
