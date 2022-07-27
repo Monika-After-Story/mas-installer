@@ -433,14 +433,20 @@ pub fn build_options_win(sender: Sender<Message>) -> DoubleWindow {
     _build_top_frame(OPTIONS_FRAME_LABEL);
 
 
-    const BUT_INST_SPR_WIDTH: i32 = BUT_WIDTH+45;
+    const BUT_USE_DLX_VERSION_WIDTH: i32 = BUT_WIDTH+225;
     const TOTAL_BUTS: i32 = 1;
-    const XPOS: i32 = (WIN_WIDTH-WIN_PADDING*2)/2 - BUT_INST_SPR_WIDTH/2;
+    const XPOS: i32 = (WIN_WIDTH-WIN_PADDING*2)/2 - BUT_USE_DLX_VERSION_WIDTH/2;
     const YPOS: i32 = (WIN_HEIGHT-WIN_PADDING*2)/2 - TOTAL_BUTS*BUT_HEIGHT/2;
 
-    let mut inst_spr_but = _build_check_button(BUT_INST_SPR_WIDTH, BUT_HEIGHT, BUT_INSTALL_SPRITEPACKS_LABEL, sender, Message::InstallSpritepacks);
-    inst_spr_but.set_checked(true);
-    inst_spr_but.set_pos(XPOS, YPOS);
+    let mut but_inst_dlx = _build_check_button(
+        BUT_USE_DLX_VERSION_WIDTH,
+        BUT_HEIGHT,
+        BUT_USE_DLX_VERSION_LABEL,
+        sender,
+        Message::InstallSpritepacksCheck
+    );
+    but_inst_dlx.set_checked(true);
+    but_inst_dlx.set_pos(XPOS, YPOS);
 
 
     _build_ternary_but_pack(sender);

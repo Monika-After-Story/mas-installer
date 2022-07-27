@@ -33,7 +33,7 @@ pub static BUT_ABORT_LABEL: &'static str = "Abort";
 pub static BUT_BACK_LABEL: &'static str = "@< Back ";
 pub static BUT_CONTINUE_LABEL: &'static str = " Continue@>";
 pub static BUT_SELECT_DIR_LABEL: &'static str = " Select directory @fileopen";
-pub static BUT_INSTALL_SPRITEPACKS_LABEL: &'static str = "Install spritepacks";
+pub static BUT_USE_DLX_VERSION_LABEL: &'static str = "Deluxe version (pre-installed spritepacks)";
 
 
 // Frame consts
