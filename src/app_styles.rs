@@ -29,11 +29,11 @@ pub const BUT_PADDING: i32 = 3;
 pub const BUT_FONT_SIZE: i32 = 16;
 pub const BUT_FONT: Font = Font::HelveticaBold;
 
-pub static BUT_ABORT_LABEL: &'static str = "Abort";
-pub static BUT_BACK_LABEL: &'static str = "@< Back ";
-pub static BUT_CONTINUE_LABEL: &'static str = " Continue@>";
-pub static BUT_SELECT_DIR_LABEL: &'static str = " Select directory @fileopen";
-pub static BUT_USE_DLX_VERSION_LABEL: &'static str = "Deluxe version (pre-installed spritepacks)";
+pub const BUT_ABORT_LABEL: &str = "Abort";
+pub const BUT_BACK_LABEL: &str = "@< Back ";
+pub const BUT_CONTINUE_LABEL: &str = " Continue@>";
+pub const BUT_SELECT_DIR_LABEL: &str = " Select directory @fileopen";
+pub const BUT_USE_DLX_VERSION_LABEL: &str = "Deluxe version (pre-installed spritepacks)";
 
 
 // Frame consts
@@ -46,7 +46,7 @@ pub const TOP_FRAME_YPOS: i32 = 15;
 pub const SEL_DIR_TXT_HEIGHT: i32 = BUT_SEL_DIR_HEIGHT;
 pub const SEL_DIR_TXT_SIZE: i32 = 18;
 
-pub static SEL_DIR_DLG_PROMPT: &'static str = "Select DDLC directory";
+pub const SEL_DIR_DLG_PROMPT: &str = "Select DDLC directory";
 
 
 // Color constants
@@ -61,11 +61,11 @@ pub const C_DDLC_WHITE_ACT: Color = Color::from_hex(0xffffff);
 pub const C_DDLC_PINK_ACT: Color = C_DDLC_PINK_IDLE;
 
 
-pub static WELCOME_FRAME_LABEL: &'static str = concat!(
+pub const WELCOME_FRAME_LABEL: &str = concat!(
     "Welcome to MAS installer\n\n\n\n\n",
     "This program will install the Monika After Story\n",
     "mod on your computer"
 );
-pub static LICENSE_FRAME_LABEL: &'static str = "By continuing you agree with our license";
-pub static SELECT_DIR_FRAME_LABEL: &'static str = "Select Doki Doki Literature Club directory";
-pub static OPTIONS_FRAME_LABEL: &'static str = "Select additional settings";
+pub const LICENSE_FRAME_LABEL: &str = "By continuing you agree with our license";
+pub const SELECT_DIR_FRAME_LABEL: &str = "Select Doki Doki Literature Club directory";
+pub const OPTIONS_FRAME_LABEL: &str = "Select additional settings";

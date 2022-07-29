@@ -38,8 +38,8 @@ static APP_LICENSE: &'static str = include_str!("static/license.md");
 #[cfg(not(feature="compile_license"))]
 static APP_LICENSE: &'static str = "Hello, World!";
 // GH link parts to accept the API
-static ORG_NAME: &'static str = "Monika-After-Story";
-static REPO_NAME: &'static str = "MonikaModDev";
+const ORG_NAME: &str = "Monika-After-Story";
+const REPO_NAME: &str = "MonikaModDev";
 // IDs of assets in github release
 const DEF_VERSION_ASSET_ID: usize = 1;
 const DLX_VERSION_ASSET_ID: usize = 0;
@@ -51,7 +51,7 @@ pub enum Message {
     NextPage,
     PrevPage,
     SelectDir,
-    InstallSpritepacksCheck,
+    InstallDlxVersionCheck,
     Downloading,
     Extracting,
     Done
@@ -109,7 +109,7 @@ fn main() {
                     extraction_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
                     path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
                 }
-                Message::InstallSpritepacksCheck => {
+                Message::InstallDlxVersionCheck => {
                     is_deluxe_version = !is_deluxe_version;
                     // println!("is deluxe: {:?}", is_deluxe_version);
                 }
