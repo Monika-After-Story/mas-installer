@@ -319,7 +319,7 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
 }
 
 
-fn _build_license_win_inner_pack() -> Pack {
+fn _build_ternary_inner_pack() -> Pack {
     const TOTAL_ITEMS: i32 = 2;
 
     let mut inner_pack = Pack::default()
@@ -333,7 +333,7 @@ fn _build_license_win_inner_pack() -> Pack {
     return inner_pack
 }
 
-fn _build_license_win_outer_pack(spacing: i32) -> Pack {
+fn _build_ternary_outer_pack(spacing: i32) -> Pack {
     const PAD_X: i32 = 50;
     let pad_y: i32 = WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT-25;//mul_int_float(WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT, 0.9);
 
@@ -349,21 +349,50 @@ fn _build_license_win_outer_pack(spacing: i32) -> Pack {
     return pack
 }
 
-fn _build_ternary_but_pack(sender: Sender<Message>) {
-    let inner_pack = _build_license_win_inner_pack();
+/// Builds a pack of 3 buttons
+fn _build_ternary_but_pack(
+    sender: Sender<Message>,
+    but0_data: (&str, Message),
+    but1_data: (&str, Message),
+    but2_data: (&str, Message)
+) {
+    let inner_pack = _build_ternary_inner_pack();
 
     inner_pack.begin();
-    build_button(BUT_BACK_LABEL, sender, Message::PrevPage);
-    build_button(BUT_CONTINUE_LABEL, sender, Message::NextPage);
+    build_button(but1_data.0, sender, but1_data.1);
+    build_button(but2_data.0, sender, but2_data.1);
     inner_pack.end();
 
-    let mut outer_pack = _build_license_win_outer_pack(inner_pack.w());
+    let mut outer_pack = _build_ternary_outer_pack(inner_pack.w());
 
     outer_pack.begin();
-    build_button(BUT_ABORT_LABEL, sender, Message::Close);
+    build_button(but0_data.0, sender, but0_data.1);
     outer_pack.add(&inner_pack);
     outer_pack.end();
 }
+
+/// Builds a pack of 3 buttons
+/// Example: <Abort>      <Back> <Continue>
+fn _build_abort_back_contn_pack(sender: Sender<Message>) {
+    _build_ternary_but_pack(
+        sender,
+        (BUT_ABORT_LABEL, Message::Close),
+        (BUT_BACK_LABEL, Message::PrevPage),
+        (BUT_CONTINUE_LABEL, Message::NextPage)
+    );
+}
+
+/// Builds a pack of 3 buttons
+/// Example: <Abort>      <Back> <Install>
+fn _build_abort_back_inst_pack(sender: Sender<Message>) {
+    _build_ternary_but_pack(
+        sender,
+        (BUT_ABORT_LABEL, Message::Close),
+        (BUT_BACK_LABEL, Message::PrevPage),
+        (BUT_INSTALL_LABEL, Message::Install)
+    );
+}
+
 
 /// Builds the license window
 pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
@@ -381,7 +410,7 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
         .with_pos(0, 100);
     txt.set_buffer(buf);
 
-    _build_ternary_but_pack(sender);
+    _build_abort_back_contn_pack(sender);
 
 
     license_win.end();
@@ -415,7 +444,7 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
 
     pack.end();
 
-    _build_ternary_but_pack(sender);
+    _build_abort_back_contn_pack(sender);
 
 
     select_dir_win.end();
@@ -449,7 +478,7 @@ pub fn build_options_win(sender: Sender<Message>) -> DoubleWindow {
     but_inst_dlx.set_pos(XPOS, YPOS);
 
 
-    _build_ternary_but_pack(sender);
+    _build_abort_back_inst_pack(sender);
 
 
     options_win.end();

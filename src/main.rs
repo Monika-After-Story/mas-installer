@@ -52,6 +52,7 @@ pub enum Message {
     PrevPage,
     SelectDir,
     InstallDlxVersionCheck,
+    Install,
     Downloading,
     Extracting,
     Done
@@ -108,17 +109,19 @@ fn main() {
                 Message::SelectDir => {
                     extraction_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
                     path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
-                }
+                },
                 Message::InstallDlxVersionCheck => {
                     is_deluxe_version = !is_deluxe_version;
-                    // println!("is deluxe: {:?}", is_deluxe_version);
-                }
+                },
+                Message::Install => {
+                    utils::install_game_in_thread(&extraction_dir, sender, is_deluxe_version);
+                },
                 Message::Downloading => {
                     println!("Downloading");
-                }
+                },
                 Message::Extracting => {
                     println!("Extracting");
-                }
+                },
                 Message::Done => {
                     println!("Done");
                 }

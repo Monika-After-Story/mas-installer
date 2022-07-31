@@ -34,6 +34,7 @@ pub const BUT_BACK_LABEL: &str = "@< Back ";
 pub const BUT_CONTINUE_LABEL: &str = " Continue@>";
 pub const BUT_SELECT_DIR_LABEL: &str = " Select directory @fileopen";
 pub const BUT_USE_DLX_VERSION_LABEL: &str = "Deluxe version (pre-installed spritepacks)";
+pub const BUT_INSTALL_LABEL: &str = " Install";
 
 
 // Frame consts

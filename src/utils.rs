@@ -1,6 +1,6 @@
 use std::{
     env,
-    path::{Path, PathBuf},
+    path::PathBuf,
     fs::{File, create_dir_all},
     io,
     cmp::{min},
@@ -10,7 +10,10 @@ use std::{
 
 use fltk::{
     image,
-    app::add_handler,
+    app::{
+        add_handler,
+        Sender
+    },
     dialog::{
         NativeFileChooser,
         NativeFileChooserType,
@@ -31,10 +34,13 @@ use reqwest::{
 
 use zip::ZipArchive;
 
-use crate::errors::{
-    InstallerError,
-    DownloadError,
-    ExtractionError
+use crate::{
+    errors::{
+        InstallerError,
+        DownloadError,
+        ExtractionError
+    },
+    Message
 };
 
 
@@ -98,6 +104,23 @@ pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
     c.show();
 
     return c.filename()
+}
+
+
+/// Builds a client for this installer to access GitHub API
+pub fn build_client() -> Result<req_blocking::Client, InstallerError> {
+    use headers::HeaderValue;
+
+    let mut headers = headers::HeaderMap::new();
+    headers.append(headers::USER_AGENT, HeaderValue::from_static("Monika After Story Installer"));
+    headers.append(headers::ACCEPT_CHARSET, HeaderValue::from_static("utf8"));
+    headers.append(headers::ACCEPT_LANGUAGE, HeaderValue::from_static("en-US"));
+    headers.append(headers::CONTENT_LANGUAGE, HeaderValue::from_static("en-US"));
+
+    let client = req_blocking::Client::builder()
+        .default_headers(headers)
+        .build()?;
+    return Ok(client)
 }
 
 
@@ -179,7 +202,7 @@ fn _download_to_file(client: &req_blocking::Client, download_link: &String, file
 }
 
 /// Extracts a zip archive
-fn _extract_archive(archive: &File, destination_dir: &Path) -> Result<(), ExtractionError> {
+fn _extract_archive(archive: &File, destination_dir: &PathBuf) -> Result<(), ExtractionError> {
     let mut archive = ZipArchive::new(archive)?;
 
     for i in 0..archive.len() {
@@ -210,23 +233,83 @@ fn _extract_archive(archive: &File, destination_dir: &Path) -> Result<(), Extrac
     return Ok(())
 }
 
-/// Handles an assets, that's it, downloads it into a temp folder and then extracts
-fn _handle_asset(client: &req_blocking::Client, download_link: &String, destination_dir: &Path) -> Result<(), InstallerError> {
-    let tmp_dir = tempfile::Builder::new()
+/// Creates a temp dir for the installer temp data
+fn _create_temp_dir() -> Result<tempfile::TempDir, io::Error> {
+    return tempfile::Builder::new()
         .prefix(".mas_installer-")
-        .tempdir()?;
+        .tempdir()
+}
 
-    let fp = tmp_dir.path().join("temp");
-
-    let mut tmp_file = File::options()
+/// Creates a temp file for the installer data
+fn _create_temp_file(temp_dir: &tempfile::TempDir) -> Result<File, io::Error> {
+    let fp = temp_dir.path().join("temp");
+    return File::options()
         .write(true)
         .read(true)
         .create(true)
         .truncate(true)
-        .open(&fp)?;
+        .open(&fp)
+}
 
-    _download_to_file(client, download_link, &mut tmp_file)?;
-    _extract_archive(&tmp_file, destination_dir)?;
+/// Main method to handle game installation process, downloads it into a temp folder and then extracts
+pub fn install_game(
+    destination_dir: &PathBuf,
+    sender: Sender<Message>,
+    is_deluxe: bool
+) -> Result<(), InstallerError> {
+    // Mark as downloading asap
+    sender.send(Message::Downloading);
+
+    let client = build_client()?;
+
+    // Get download link
+    let (def, dlx) = _get_assets_links(&client)?;
+    let download_link = match is_deluxe {
+        true => dlx,
+        false => def
+    };
+    // let download_link = String::from("https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.9/spritepacks-combined.zip");
+
+    // Create temp structures
+    let temp_dir = _create_temp_dir()?;
+    let mut temp_file = _create_temp_file(&temp_dir)?;
+
+    // Install
+    _download_to_file(&client, &download_link, &mut temp_file)?;
+    sender.send(Message::Extracting);
+    _extract_archive(&temp_file, destination_dir)?;
+    sender.send(Message::Done);
+
+    drop(temp_file);
 
     return Ok(())
+}
+
+/// Threaded version of install_game
+pub fn install_game_in_thread(
+    destination_dir: &PathBuf,
+    sender: Sender<Message>,
+    is_deluxe: bool
+) {
+    // use std::sync::{
+    //     Mutex,
+    //     Arc
+    // };
+    // let client = Arc::new(Mutex::new(client));
+    // let download_link = Arc::new(Mutex::new(download_link));
+    // let destination_dir = Arc::new(Mutex::new(destination_dir));
+    // let client = client.clone();
+    // let download_link = download_link.clone();
+    let destination_dir = destination_dir.clone();
+    let sender = sender.clone();
+    thread::spawn(
+        move || -> Result<(), InstallerError> {
+            // let c = client.lock().unwrap();
+            // let dl = download_link.lock().unwrap();
+            // let dr = destination_dir.lock().unwrap();
+            // install_game(*c, *dl, *dr, sender).unwrap();
+            install_game(&destination_dir, sender, is_deluxe)?;
+            return Ok(())
+        }
+    );
 }
