@@ -472,7 +472,7 @@ pub fn build_options_win(sender: Sender<Message>) -> DoubleWindow {
         BUT_HEIGHT,
         BUT_USE_DLX_VERSION_LABEL,
         sender,
-        Message::InstallDlxVersionCheck
+        Message::DlxVersionCheck
     );
     but_inst_dlx.set_checked(true);
     but_inst_dlx.set_pos(XPOS, YPOS);

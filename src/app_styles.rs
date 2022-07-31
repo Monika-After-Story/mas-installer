@@ -47,7 +47,7 @@ pub const TOP_FRAME_YPOS: i32 = 15;
 pub const SEL_DIR_TXT_HEIGHT: i32 = BUT_SEL_DIR_HEIGHT;
 pub const SEL_DIR_TXT_SIZE: i32 = 18;
 
-pub const SEL_DIR_DLG_PROMPT: &str = "Select DDLC directory";
+pub const SEL_DIR_DLG_PROMPT: &str = "Select Doki Doki Literature Club directory";
 
 
 // Color constants

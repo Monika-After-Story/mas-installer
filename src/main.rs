@@ -26,6 +26,8 @@ use fltk::{
     }
 };
 
+use errors::InstallerError;
+
 
 // Include the icon
 #[cfg(feature="compile_icon")]
@@ -51,10 +53,11 @@ pub enum Message {
     NextPage,
     PrevPage,
     SelectDir,
-    InstallDlxVersionCheck,
+    DlxVersionCheck,
     Install,
     Downloading,
     Extracting,
+    Error,
     Done
 }
 
@@ -107,10 +110,13 @@ fn main() {
                     utils::switch_win(&mut windows, &mut current_win_id, new_id);
                 },
                 Message::SelectDir => {
-                    extraction_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
-                    path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
+                    let selected_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
+                    if selected_dir.is_dir() || selected_dir.parent().is_some() {
+                        extraction_dir = selected_dir;
+                        path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
+                    }
                 },
-                Message::InstallDlxVersionCheck => {
+                Message::DlxVersionCheck => {
                     is_deluxe_version = !is_deluxe_version;
                 },
                 Message::Install => {
@@ -121,6 +127,9 @@ fn main() {
                 },
                 Message::Extracting => {
                     println!("Extracting");
+                },
+                Message::Error => {
+                    println!("Error");
                 },
                 Message::Done => {
                     println!("Done");
