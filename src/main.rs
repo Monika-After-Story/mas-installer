@@ -5,6 +5,8 @@ mod errors;
 mod utils;
 
 
+use std::thread;
+
 use fltk::{
     app::{
         channel,
@@ -61,6 +63,8 @@ pub enum Message {
     Done
 }
 
+type InstallResult = Result<(), InstallerError>;
+
 
 /// The entry point
 fn main() {
@@ -68,6 +72,7 @@ fn main() {
 
     let (sender, receiver): (Sender<Message>, Receiver<Message>) = channel();
     let mut is_deluxe_version: bool = true;
+    let mut installer_th_handle: Option<thread::JoinHandle<InstallResult>> = None;
     let mut extraction_dir = utils::get_cwd();
     let mut path_txt_buf = TextBuffer::default();
     path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
@@ -100,7 +105,9 @@ fn main() {
     while app.wait() {
         if let Some(msg) = receiver.recv() {
             match msg {
-                Message::Close => app.quit(),
+                Message::Close => {
+                    break;
+                },
                 Message::NextPage => {
                     let new_id = current_win_id+1;
                     utils::switch_win(&mut windows, &mut current_win_id, new_id);
@@ -120,7 +127,9 @@ fn main() {
                     is_deluxe_version = !is_deluxe_version;
                 },
                 Message::Install => {
-                    utils::install_game_in_thread(&extraction_dir, sender, is_deluxe_version);
+                    installer_th_handle = Some(
+                        utils::install_game_in_thread(&extraction_dir, sender, is_deluxe_version)
+                    );
                 },
                 Message::Downloading => {
                     println!("Downloading");
@@ -129,6 +138,9 @@ fn main() {
                     println!("Extracting");
                 },
                 Message::Error => {
+                    let _rv = cleanup_th_handle(installer_th_handle);
+                    // We've moved the handle, set it to None
+                    installer_th_handle = None;
                     println!("Error");
                 },
                 Message::Done => {
@@ -137,4 +149,24 @@ fn main() {
             }
         }
     }
+    cleanup_th_handle(installer_th_handle);
+    app.quit();
+}
+
+/// Joins the thread handle
+fn cleanup_th_handle(th_handle: Option<thread::JoinHandle<InstallResult>>) -> Option<InstallerError> {
+    if let Some(th_handle) = th_handle {
+        match th_handle.join() {
+            Err(rv) => {
+                eprintln!("Failed to join installer thread {:?}", rv);
+            },
+            Ok(rv) => {
+                if let Err(e) = rv {
+                    eprintln!("Installer thread failed: {}", e);
+                    return Some(e);
+                }
+            }
+        }
+    }
+    return None;
 }

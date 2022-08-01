@@ -40,14 +40,15 @@ use crate::{
         DownloadError,
         ExtractionError
     },
-    Message
+    Message,
+    InstallResult
 };
 
 
 /// Multiplies int by float and returns int
 /// Useful to position widgets relatively of the windows size
 // pub fn mul_int_float(a: i32, b: f32) -> i32 {
-//     return (a as f32 * b) as i32
+//     return (a as f32 * b) as i32;
 // }
 
 
@@ -76,7 +77,7 @@ pub fn disable_global_hotkeys() {
             return match ev {
                 Event::Shortcut => true,
                 _ => false
-            }
+            };
         }
     );
 }
@@ -85,7 +86,7 @@ pub fn disable_global_hotkeys() {
 /// Returns current working dir
 pub fn get_cwd() -> PathBuf {
     let cwd = env::current_dir();
-    return cwd.ok().unwrap_or_default()
+    return cwd.ok().unwrap_or_default();
 }
 
 /// Launches select directory dialogue native to the target OS
@@ -103,7 +104,7 @@ pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
 
     c.show();
 
-    return c.filename()
+    return c.filename();
 }
 
 
@@ -120,7 +121,7 @@ pub fn build_client() -> Result<req_blocking::Client, InstallerError> {
     let client = req_blocking::Client::builder()
         .default_headers(headers)
         .build()?;
-    return Ok(client)
+    return Ok(client);
 }
 
 
@@ -147,7 +148,7 @@ fn _get_assets_links(client: &req_blocking::Client) -> Result<(String, String), 
         .as_str().ok_or(InstallerError::CorruptedJSON("couldn't parse link to a str"))?
         .to_owned();
 
-    return Ok((def_link, dlx_link))
+    return Ok((def_link, dlx_link));
 }
 
 /// Downloads data from the given link using the provided client
@@ -174,7 +175,7 @@ fn _download_to_file(client: &req_blocking::Client, download_link: &String, file
 
         let status_code = resp.status();
         if !status_code.is_success() {
-            return Err(DownloadError::InvalidStatusCode(status_code))
+            return Err(DownloadError::InvalidStatusCode(status_code));
         }
 
         // Write the received data
@@ -198,7 +199,7 @@ fn _download_to_file(client: &req_blocking::Client, download_link: &String, file
 
     // println!("Total downloaded: {}", total_downloaded);
 
-    return Ok(())
+    return Ok(());
 }
 
 /// Extracts a zip archive
@@ -230,14 +231,14 @@ fn _extract_archive(archive: &File, destination_dir: &PathBuf) -> Result<(), Ext
             io::copy(&mut file, &mut outfile)?;
         }
     }
-    return Ok(())
+    return Ok(());
 }
 
 /// Creates a temp dir for the installer temp data
 fn _create_temp_dir() -> Result<tempfile::TempDir, io::Error> {
     return tempfile::Builder::new()
         .prefix(".mas_installer-")
-        .tempdir()
+        .tempdir();
 }
 
 /// Creates a temp file for the installer data
@@ -248,7 +249,7 @@ fn _create_temp_file(temp_dir: &tempfile::TempDir) -> Result<File, io::Error> {
         .read(true)
         .create(true)
         .truncate(true)
-        .open(&fp)
+        .open(&fp);
 }
 
 /// Main method to handle game installation process, downloads it into a temp folder and then extracts
@@ -256,7 +257,7 @@ pub fn install_game(
     destination_dir: &PathBuf,
     sender: Sender<Message>,
     is_deluxe: bool
-) -> Result<(), InstallerError> {
+) -> InstallResult {
     // Mark as downloading asap
     sender.send(Message::Downloading);
 
@@ -282,7 +283,7 @@ pub fn install_game(
 
     drop(temp_file);
 
-    return Ok(())
+    return Ok(());
 }
 
 /// Threaded version of install_game
@@ -290,26 +291,20 @@ pub fn install_game_in_thread(
     destination_dir: &PathBuf,
     sender: Sender<Message>,
     is_deluxe: bool
-) {
-    // use std::sync::{
-    //     Mutex,
-    //     Arc
-    // };
-    // let client = Arc::new(Mutex::new(client));
-    // let download_link = Arc::new(Mutex::new(download_link));
-    // let destination_dir = Arc::new(Mutex::new(destination_dir));
-    // let client = client.clone();
-    // let download_link = download_link.clone();
+) -> thread::JoinHandle<InstallResult> {
+
     let destination_dir = destination_dir.clone();
     let sender = sender.clone();
-    thread::spawn(
-        move || -> Result<(), InstallerError> {
-            // let c = client.lock().unwrap();
-            // let dl = download_link.lock().unwrap();
-            // let dr = destination_dir.lock().unwrap();
-            // install_game(*c, *dl, *dr, sender).unwrap();
-            install_game(&destination_dir, sender, is_deluxe)?;
-            return Ok(())
+
+    return thread::spawn(
+        move || -> InstallResult {
+            return match install_game(&destination_dir, sender, is_deluxe) {
+                Err(e) => {
+                    sender.send(Message::Error);
+                    Err(e)
+                },
+                Ok(_) => Ok(())
+            };
         }
     );
 }
