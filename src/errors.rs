@@ -27,12 +27,12 @@ pub enum DownloadError {
 
 impl From<ReqError> for DownloadError {
     fn from(err: ReqError) -> Self {
-        return Self::RequestError(err)
+        return Self::RequestError(err);
     }
 }
 impl From<IOError> for DownloadError {
     fn from(err: IOError) -> Self {
-        return Self::IOError(err)
+        return Self::IOError(err);
     }
 }
 
@@ -42,7 +42,7 @@ impl StdError for DownloadError {
             Self::RequestError(og_err) => Some(og_err),
             Self::IOError(og_err) => Some(og_err),
             _ => None
-        }
+        };
     }
 }
 
@@ -61,7 +61,7 @@ impl fmt::Display for DownloadError {
             Self::IOError(err) => {
                 write!(f, "failed to read/write data: {}", err)
             }
-        }
+        };
     }
 }
 
@@ -79,12 +79,12 @@ pub enum ExtractionError {
 
 impl From<ZipError> for ExtractionError {
     fn from(err: ZipError) -> Self {
-        return Self::ArchiveError(err)
+        return Self::ArchiveError(err);
     }
 }
 impl From<IOError> for ExtractionError {
     fn from(err: IOError) -> Self {
-        return Self::IOError(err)
+        return Self::IOError(err);
     }
 }
 
@@ -94,7 +94,7 @@ impl StdError for ExtractionError {
             Self::ArchiveError(og_err) => Some(og_err),
             Self::IOError(og_err) => Some(og_err),
             _ => None
-        }
+        };
     }
 }
 
@@ -110,7 +110,7 @@ impl fmt::Display for ExtractionError {
             Self::IOError(err) => {
                 write!(f, "failed to read/write data: {}", err)
             }
-        }
+        };
     }
 }
 
@@ -135,27 +135,27 @@ pub enum InstallerError {
 
 impl From<SerdeError> for InstallerError {
     fn from(err: SerdeError) -> Self {
-        return Self::InvalidJson(err)
+        return Self::InvalidJson(err);
     }
 }
 impl From<ReqError> for InstallerError {
     fn from(err: ReqError) -> Self {
-        return Self::RequestError(err)
+        return Self::RequestError(err);
     }
 }
 impl From<IOError> for InstallerError {
     fn from(err: IOError) -> Self {
-        return Self::IOError(err)
+        return Self::IOError(err);
     }
 }
 impl From<DownloadError> for InstallerError {
     fn from(err: DownloadError) -> Self {
-        return Self::DownloadError(err)
+        return Self::DownloadError(err);
     }
 }
 impl From<ExtractionError> for InstallerError{
     fn from(err: ExtractionError) -> Self {
-        return Self::ExtractionError(err)
+        return Self::ExtractionError(err);
     }
 }
 
@@ -168,7 +168,7 @@ impl StdError for InstallerError {
             Self::IOError(og_err) => Some(og_err),
             Self::ExtractionError(og_err) => Some(og_err),
             _ => None
-        }
+        };
     }
 }
 
@@ -193,6 +193,6 @@ impl fmt::Display for InstallerError {
             Self::ExtractionError(err) => {
                 write!(f, "extraction failed: {}", err)
             }
-        }
+        };
     }
 }

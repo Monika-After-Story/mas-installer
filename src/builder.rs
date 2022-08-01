@@ -51,7 +51,7 @@ use crate::{
 
 /// Builds a default app
 pub fn build_app() -> App {
-    return App::default()
+    return App::default();
 }
 
 
@@ -67,7 +67,7 @@ pub fn build_outer_win() -> DoubleWindow {
 
     main_win.end();
 
-    return main_win
+    return main_win;
 }
 
 
@@ -82,7 +82,7 @@ pub fn build_inner_win() -> DoubleWindow {
     inner_win.end();
     inner_win.hide();
 
-    return inner_win
+    return inner_win;
 }
 
 
@@ -108,14 +108,14 @@ fn __handle_button_widget(b: &mut dyn WidgetExt, ev: Event) -> bool {
         },
         // For all unhandled events we must return false
         _ => false
-    }
+    };
 }
 
 /// Callback for handling buttons events.
 /// Allows to handle hover events
 /// This is a Button version
 fn _handle_button(b: &mut Button, ev: Event) -> bool {
-    return __handle_button_widget(b, ev)
+    return __handle_button_widget(b, ev);
 }
 
 /// Callback for handling how the button is being drawn.
@@ -153,7 +153,7 @@ fn _build_button(width: i32, height: i32, label: &str, sender: Sender<Message>, 
     but.handle(_handle_button);
     but.draw(_draw_button);
 
-    return but
+    return but;
 }
 
 /// Builds a button with the given label, sender, and msg
@@ -166,7 +166,7 @@ pub fn build_button(label: &str, sender: Sender<Message>, msg: Message) -> Butto
         sender,
         msg
     );
-    return but
+    return but;
 }
 
 /// Builds a select directory dialogue button
@@ -177,7 +177,7 @@ pub fn build_sel_dir_button(label: &str, sender: Sender<Message>, msg: Message) 
         label,
         sender,
         msg
-    )
+    );
 }
 
 
@@ -185,7 +185,7 @@ pub fn build_sel_dir_button(label: &str, sender: Sender<Message>, msg: Message) 
 /// Allows to handle hover events
 /// This is a CheckButton version
 fn _handle_check_button(b: &mut CheckButton, ev: Event) -> bool {
-    return __handle_button_widget(b, ev)
+    return __handle_button_widget(b, ev);
 }
 
 /// Callback for handling how the button is being drawn.
@@ -238,7 +238,7 @@ fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Mess
     but.set_frame(FrameType::NoBox);
     but.set_down_frame(FrameType::NoBox);
 
-    return but
+    return but;
 }
 
 // pub fn build_check_button(label: &str, sender: Sender<Message>, msg: Message) -> CheckButton {
@@ -250,7 +250,7 @@ fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Mess
 //         msg
 //     );
 
-//     return but
+//     return but;
 // }
 
 
@@ -262,7 +262,7 @@ fn _build_frame(xpos: i32, ypos: i32) -> Frame {
         // .with_align(Align::Top | Align::Inside)
         // .with_label(label);
 
-    return frame
+    return frame;
 }
 
 /// Builds a frame at the top with the given label
@@ -276,7 +276,7 @@ fn _build_top_frame(label: &str) -> Frame {
     // frame.set_label_type(LabelType::Normal);
     frame.set_label_size(TOP_FRAME_LABEL_SIZE);
 
-    return frame
+    return frame;
 }
 
 
@@ -294,7 +294,7 @@ fn _build_welcome_win_pack() -> Pack {
 
     pack.end();
 
-    return pack
+    return pack;
 }
 
 /// Builds the welcome windows
@@ -315,7 +315,7 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
 
     welcome_win.end();
 
-    return welcome_win
+    return welcome_win;
 }
 
 
@@ -330,7 +330,7 @@ fn _build_ternary_inner_pack() -> Pack {
 
     inner_pack.end();
 
-    return inner_pack
+    return inner_pack;
 }
 
 fn _build_ternary_outer_pack(spacing: i32) -> Pack {
@@ -346,7 +346,7 @@ fn _build_ternary_outer_pack(spacing: i32) -> Pack {
 
     pack.end();
 
-    return pack
+    return pack;
 }
 
 /// Builds a pack of 3 buttons
@@ -415,7 +415,7 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
 
     license_win.end();
 
-    return license_win
+    return license_win;
 }
 
 
@@ -449,7 +449,7 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
 
     select_dir_win.end();
 
-    return select_dir_win
+    return select_dir_win;
 }
 
 
@@ -483,5 +483,5 @@ pub fn build_options_win(sender: Sender<Message>) -> DoubleWindow {
 
     options_win.end();
 
-    return options_win
+    return options_win;
 }
