@@ -51,14 +51,17 @@ const DLX_VERSION_ASSET_ID: usize = 0;
 
 #[derive(Clone, Copy)]
 pub enum Message {
+    UpdateProgressBar(f64),
     Close,
     NextPage,
     PrevPage,
     SelectDir,
     DlxVersionCheck,
     Install,
+    Preparing,
     Downloading,
     Extracting,
+    CleaningUp,
     Error,
     Done
 }
@@ -76,6 +79,7 @@ fn main() {
     let mut extraction_dir = utils::get_cwd();
     let mut path_txt_buf = TextBuffer::default();
     path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
+    let mut progress_bar = builder::build_progress_bar();
 
     let app = builder::build_app();
 
@@ -87,7 +91,8 @@ fn main() {
     let welcome_win = builder::build_welcome_win(sender);
     let license_win = builder::build_license_win(sender);
     let dir_sel_win = builder::build_select_dir_win(sender, path_txt_buf.clone());
-    let options_win = builder::build_options_win(sender);
+    let options_win = builder::build_options_win(sender, is_deluxe_version);
+    let mut progress_win = builder::build_propgress_win(sender, &progress_bar);
 
 
     main_win.end();
@@ -105,6 +110,9 @@ fn main() {
     while app.wait() {
         if let Some(msg) = receiver.recv() {
             match msg {
+                Message::UpdateProgressBar(val) => {
+                    progress_bar.set_value(val);
+                },
                 Message::Close => {
                     break;
                 },
@@ -127,24 +135,38 @@ fn main() {
                     is_deluxe_version = !is_deluxe_version;
                 },
                 Message::Install => {
+                    utils::hide_current_win(&mut windows, current_win_id);
+                    progress_win.show();
                     installer_th_handle = Some(
                         utils::install_game_in_thread(&extraction_dir, sender, is_deluxe_version)
                     );
                 },
+                Message::Preparing => {
+                    println!("Preparing");
+                    progress_bar.set_label("Preparing...");
+                },
                 Message::Downloading => {
                     println!("Downloading");
+                    progress_bar.set_label("Downloading...");
                 },
                 Message::Extracting => {
                     println!("Extracting");
+                    progress_bar.set_label("Extracting...");
+                },
+                Message::CleaningUp => {
+                    println!("Cleaning up");
+                    progress_bar.set_label("Cleaning up...");
                 },
                 Message::Error => {
                     let _rv = cleanup_th_handle(installer_th_handle);
                     // We've moved the handle, set it to None
                     installer_th_handle = None;
-                    println!("Error");
+                    // Request exit
+                    sender.send(Message::Close);
                 },
                 Message::Done => {
                     println!("Done");
+                    sender.send(Message::Close);
                 }
             }
         }

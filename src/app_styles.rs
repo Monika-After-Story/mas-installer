@@ -51,8 +51,9 @@ pub const SEL_DIR_DLG_PROMPT: &str = "Select Doki Doki Literature Club directory
 
 
 // Color constants
-// pub const C_WHITE: Color = Color::White;
 pub const C_BLACK: Color = Color::Black;
+pub const C_WHITE: Color = Color::White;
+
 pub const C_DDLC_PEACH: Color = Color::from_hex(0xffaa99);
 pub const C_DDLC_WHITE_IDLE: Color = Color::from_hex(0xffe6f4);
 pub const C_DDLC_PINK_IDLE: Color = Color::from_hex(0xffbde1);
@@ -60,6 +61,8 @@ pub const C_DDLC_PINK_DARK: Color = Color::from_hex(0xbb5599);
 
 pub const C_DDLC_WHITE_ACT: Color = Color::from_hex(0xffffff);
 pub const C_DDLC_PINK_ACT: Color = C_DDLC_PINK_IDLE;
+
+pub const C_BRIGHT_GREEN: Color = Color::from_hex(0x00ff00);
 
 
 pub const WELCOME_FRAME_LABEL: &str = concat!(
@@ -70,3 +73,4 @@ pub const WELCOME_FRAME_LABEL: &str = concat!(
 pub const LICENSE_FRAME_LABEL: &str = "By continuing you agree with our license";
 pub const SELECT_DIR_FRAME_LABEL: &str = "Select Doki Doki Literature Club directory";
 pub const OPTIONS_FRAME_LABEL: &str = "Select additional settings";
+pub const PROGRESS_FRAME_LABEL: &str = "Installing, please wait";

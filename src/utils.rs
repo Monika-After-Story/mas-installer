@@ -4,7 +4,7 @@ use std::{
     fs::{File, create_dir_all},
     io,
     cmp::{min},
-    thread,
+    thread::{self, sleep},
     time::Duration
 };
 
@@ -16,8 +16,7 @@ use fltk::{
     },
     dialog::{
         NativeFileChooser,
-        NativeFileChooserType,
-        // NativeFileChooserOptions
+        NativeFileChooserType
     },
     enums::Event,
     window::DoubleWindow,
@@ -45,6 +44,9 @@ use crate::{
 };
 
 
+const PAUSE_DURATION: Duration = Duration::from_millis(250);
+
+
 /// Multiplies int by float and returns int
 /// Useful to position widgets relatively of the windows size
 // pub fn mul_int_float(a: i32, b: f32) -> i32 {
@@ -54,13 +56,29 @@ use crate::{
 
 /// Changes current active windows by hiding one window and showing another
 pub fn switch_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize, new_id: usize) {
+    let cur_id = *current_id;
     // Sanity check
-    if *current_id >= windows.len() || new_id >= windows.len() {
-        return
+    if cur_id >= windows.len() || new_id >= windows.len() {
+        return;
     }
-    windows[*current_id].hide();
+    windows[cur_id].hide();
     windows[new_id].show();
     *current_id = new_id;
+}
+
+pub fn hide_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
+    if current_id >= windows.len() {
+        return;
+    }
+    windows[current_id].hide();
+}
+
+#[allow(dead_code)]
+pub fn show_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
+    if current_id >= windows.len() {
+        return;
+    }
+    windows[current_id].show();
 }
 
 
@@ -153,8 +171,15 @@ fn _get_assets_links(client: &req_blocking::Client) -> Result<(String, String), 
 
 /// Downloads data from the given link using the provided client
 /// the data is being written into the given file handler
-fn _download_to_file(client: &req_blocking::Client, download_link: &String, file: &mut File) -> Result<(), DownloadError> {
+fn _download_to_file(
+    client: &req_blocking::Client,
+    sender: Sender<Message>,
+    download_link: &String,
+    file: &mut File
+) -> Result<(), DownloadError> {
     const DEF_CHUNK_SIZE: u128 = 1024*1024*8 + 1;
+
+    sender.send(Message::UpdateProgressBar(0.0));
 
     let resp = client.head(download_link).send()?;
     let content_size = resp.headers().get(headers::CONTENT_LENGTH).ok_or(DownloadError::InvalidContentLen)?
@@ -165,6 +190,7 @@ fn _download_to_file(client: &req_blocking::Client, download_link: &String, file
     let mut low_bound: u128 = 0;
     let mut up_bound: u128 = chunk_size;
     let mut total_downloaded: u128 = 0;
+
     // println!("Content size: {}", content_size);
     loop {
         // println!("{}-{}", low_bound, up_bound-1);
@@ -182,6 +208,12 @@ fn _download_to_file(client: &req_blocking::Client, download_link: &String, file
         let received_chunk = resp.copy_to(file)? as u128;
         total_downloaded += received_chunk;
 
+        // Update progress bar
+        if content_size != 0 {
+            let pb_val = total_downloaded as f64 / content_size as f64;
+            sender.send(Message::UpdateProgressBar(pb_val));
+        }
+
         // Check if we're done
         if total_downloaded >= content_size {
             break
@@ -194,7 +226,7 @@ fn _download_to_file(client: &req_blocking::Client, download_link: &String, file
         low_bound += bound_inc;
         up_bound = min(up_bound+bound_inc, content_size+1);
         // Slep to let the server rest
-        thread::sleep(Duration::from_secs_f32(0.25));
+        sleep(PAUSE_DURATION);
     }
 
     // println!("Total downloaded: {}", total_downloaded);
@@ -203,10 +235,17 @@ fn _download_to_file(client: &req_blocking::Client, download_link: &String, file
 }
 
 /// Extracts a zip archive
-fn _extract_archive(archive: &File, destination_dir: &PathBuf) -> Result<(), ExtractionError> {
-    let mut archive = ZipArchive::new(archive)?;
+fn _extract_archive(
+    sender: Sender<Message>,
+    archive: &File,
+    destination_dir: &PathBuf
+) -> Result<(), ExtractionError> {
+    sender.send(Message::UpdateProgressBar(0.0));
 
-    for i in 0..archive.len() {
+    let mut archive = ZipArchive::new(archive)?;
+    let total_files = archive.len();
+
+    for i in 0..total_files {
         let mut file = archive.by_index(i)?;
 
         let file_path = file.enclosed_name()
@@ -230,6 +269,9 @@ fn _extract_archive(archive: &File, destination_dir: &PathBuf) -> Result<(), Ext
             let mut outfile = File::create(&extraction_path)?;
             io::copy(&mut file, &mut outfile)?;
         }
+        // Update progres bar
+        let pb_val = (i as f64 + 1.0) / total_files as f64;
+        sender.send(Message::UpdateProgressBar(pb_val));
     }
     return Ok(());
 }
@@ -258,8 +300,8 @@ pub fn install_game(
     sender: Sender<Message>,
     is_deluxe: bool
 ) -> InstallResult {
-    // Mark as downloading asap
-    sender.send(Message::Downloading);
+    sender.send(Message::Preparing);
+    sender.send(Message::UpdateProgressBar(0.0));
 
     let client = build_client()?;
 
@@ -269,19 +311,43 @@ pub fn install_game(
         true => dlx,
         false => def
     };
-    // let download_link = String::from("https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.9/spritepacks-combined.zip");
+    let download_link = String::from("https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.9/spritepacks-combined.zip");
+    sender.send(Message::UpdateProgressBar(0.5));
+    sleep(PAUSE_DURATION);
 
     // Create temp structures
     let temp_dir = _create_temp_dir()?;
     let mut temp_file = _create_temp_file(&temp_dir)?;
 
-    // Install
-    _download_to_file(&client, &download_link, &mut temp_file)?;
-    sender.send(Message::Extracting);
-    _extract_archive(&temp_file, destination_dir)?;
-    sender.send(Message::Done);
+    sender.send(Message::UpdateProgressBar(1.0));
+    sleep(PAUSE_DURATION);
 
+    // Install
+    sender.send(Message::Downloading);
+    _download_to_file(
+        &client,
+        sender,
+        &download_link,
+        &mut temp_file
+    )?;
+    sleep(PAUSE_DURATION);
+
+    sender.send(Message::Extracting);
+    _extract_archive(
+        sender,
+        &temp_file,
+        destination_dir
+    )?;
+    sleep(PAUSE_DURATION);
+
+    sender.send(Message::CleaningUp);
+    sender.send(Message::UpdateProgressBar(0.0));
     drop(temp_file);
+    sleep(PAUSE_DURATION);
+    sender.send(Message::UpdateProgressBar(1.0));
+    sleep(PAUSE_DURATION);
+
+    sender.send(Message::Done);
 
     return Ok(());
 }

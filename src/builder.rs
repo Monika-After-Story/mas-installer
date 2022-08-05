@@ -4,7 +4,6 @@ use fltk::{
         Sender
     },
     button::{
-        // ButtonType,
         Button,
         CheckButton
     },
@@ -13,9 +12,7 @@ use fltk::{
         Align,
         Color,
         Event,
-        FrameType,
-        // FrameType,
-        // LabelType
+        FrameType
     },
     frame::Frame,
     group::{
@@ -32,9 +29,10 @@ use fltk::{
         WindowExt,
         GroupExt,
         WidgetBase,
-        // ButtonExt,
-        DisplayExt, ButtonExt
+        DisplayExt,
+        ButtonExt
     },
+    misc::Progress,
     window::{
         Window,
         DoubleWindow
@@ -453,8 +451,8 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
 }
 
 
-/// Builds options windows with various settings for installer
-pub fn build_options_win(sender: Sender<Message>) -> DoubleWindow {
+/// Builds the options window with various settings for installer
+pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> DoubleWindow {
     let options_win = build_inner_win();
     options_win.begin();
 
@@ -474,7 +472,7 @@ pub fn build_options_win(sender: Sender<Message>) -> DoubleWindow {
         sender,
         Message::DlxVersionCheck
     );
-    but_inst_dlx.set_checked(true);
+    but_inst_dlx.set_checked(is_dlx_version);
     but_inst_dlx.set_pos(XPOS, YPOS);
 
 
@@ -484,4 +482,39 @@ pub fn build_options_win(sender: Sender<Message>) -> DoubleWindow {
     options_win.end();
 
     return options_win;
+}
+
+
+pub fn build_progress_bar() -> Progress {
+    let mut bar = Progress::default()
+        .with_size(WIN_WIDTH-2*WIN_PADDING, BUT_HEIGHT)
+        .with_pos(0, WIN_HEIGHT/2-BUT_HEIGHT/2);
+    bar.set_minimum(0.0);
+    bar.set_maximum(1.0);
+    bar.set_label_font(BUT_FONT);
+    bar.set_color(C_WHITE);
+    bar.set_selection_color(C_BRIGHT_GREEN);
+
+    return bar;
+}
+
+/// Builds the downloading/installing window
+pub fn build_propgress_win(sender: Sender<Message>, bar: &Progress) -> DoubleWindow {
+    let mut progress_win = build_inner_win();
+    progress_win.begin();
+
+
+    _build_top_frame(PROGRESS_FRAME_LABEL);
+
+    const PAD_X: i32 = 50;
+    const PAD_Y: i32 = WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT-25;
+    let mut abrt_but = build_button(BUT_ABORT_LABEL, sender, Message::Close);
+    abrt_but.set_pos(PAD_X, PAD_Y);
+
+    progress_win.add(bar);
+
+
+    progress_win.end();
+
+    return progress_win;
 }
