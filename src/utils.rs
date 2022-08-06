@@ -192,7 +192,7 @@ fn _download_to_file(
     client: &req_blocking::Client,
     sender: Sender<Message>,
     abort_flag: &Arc<AtomicBool>,
-    download_link: &String,
+    download_link: &str,
     file: &mut File
 ) -> Result<(), DownloadError> {
     const DEF_CHUNK_SIZE: u128 = 1024*1024*8 + 1;
