@@ -50,6 +50,11 @@ pub const SEL_DIR_TXT_SIZE: i32 = 18;
 pub const SEL_DIR_DLG_PROMPT: &str = "Select Doki Doki Literature Club directory";
 
 
+// Progress bar consts
+pub const PB_WIDTH: i32 = WIN_WIDTH-2*WIN_PADDING;
+pub const PB_HEIGHT: i32 = BUT_HEIGHT;
+
+
 // Color constants
 pub const C_BLACK: Color = Color::Black;
 pub const C_WHITE: Color = Color::White;

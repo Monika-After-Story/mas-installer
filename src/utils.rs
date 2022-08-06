@@ -358,7 +358,7 @@ pub fn install_game(
         true => dlx,
         false => def
     };
-    let download_link = String::from("https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.9/spritepacks-combined.zip");
+    // let download_link = String::from("https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.9/spritepacks-combined.zip");
     sender.send(Message::UpdateProgressBar(0.5));
     sleep();
 

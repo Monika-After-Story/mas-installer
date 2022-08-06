@@ -488,8 +488,8 @@ pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> Doubl
 /// Builds a progress bar
 pub fn build_progress_bar() -> Progress {
     let mut bar = Progress::default()
-        .with_size(WIN_WIDTH-2*WIN_PADDING, BUT_HEIGHT)
-        .with_pos(0, WIN_HEIGHT/2-BUT_HEIGHT/2);
+        .with_size(PB_WIDTH, PB_HEIGHT)
+        .with_pos(0, WIN_HEIGHT/2-PB_HEIGHT/2);
     bar.set_minimum(0.0);
     bar.set_maximum(1.0);
     bar.set_label_font(BUT_FONT);
