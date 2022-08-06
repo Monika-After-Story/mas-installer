@@ -1,7 +1,8 @@
 use fltk::{
     app::{
         App,
-        Sender
+        Sender,
+        screen_size
     },
     button::{
         Button,
@@ -518,4 +519,71 @@ pub fn build_propgress_win(sender: Sender<Message>, bar: &Progress) -> DoubleWin
     progress_win.end();
 
     return progress_win;
+}
+
+
+/// Builds an alert window to show a warning to the user
+pub fn build_alert_win(msg: &str) -> DoubleWindow {
+    let (sw, sh) = screen_size();
+
+    let win_x = sw as i32/2 - ALERT_WIN_WIDTH/2;
+    let win_y = sh as i32/2 - ALERT_WIN_HEIGHT/2;
+
+    let mut alert_win = Window::default()
+        .with_size(ALERT_WIN_WIDTH, ALERT_WIN_HEIGHT)
+        .with_pos(win_x, win_y)
+        .with_label(ALERT_WIN_TITLE);
+    alert_win.set_color(C_DDLC_WHITE_IDLE);
+
+
+    // let mut frame = Frame::default()
+    //     .with_size(ALERT_WIN_WIDTH, ALERT_WIN_HEIGHT)
+    //     .with_pos(0, 0)
+    //     .with_align(Align::Top | Align::Inside)
+    //     .with_label(msg);
+    // frame.set_label_color(C_DDLC_PINK_DARK);
+    // frame.set_label_size(15);
+
+    let mut tmp_string = String::new();
+    let mut n: usize = 1;
+    for s in msg.split(": ") {
+        tmp_string.push_str(s);
+        tmp_string.push_str("\n");
+        tmp_string.push_str(&"    ".repeat(n));
+        n += 1;
+    }
+
+    let mut buf = TextBuffer::default();
+    buf.set_text(&tmp_string);
+
+    let mut txt = TextDisplay::default()
+        .with_size(
+            ALERT_WIN_WIDTH,
+            ALERT_WIN_HEIGHT - BUT_HEIGHT - BUT_ALERT_WIN_PADDING*2
+        )
+        .with_pos(0, 0);
+    txt.set_buffer(buf);
+
+    let mut but = Button::default()
+        .with_size(BUT_WIDTH, BUT_HEIGHT)
+        .with_pos(
+            ALERT_WIN_WIDTH/2 - BUT_WIDTH/2,
+            ALERT_WIN_HEIGHT - BUT_HEIGHT - BUT_ALERT_WIN_PADDING
+        )
+        .with_label(BUT_ALERT_OK_LABEL);
+
+    but.visible_focus(false);
+    but.handle(_handle_button);
+    but.set_callback({
+        let mut win = alert_win.clone();
+        move |_| win.hide()
+    });
+    but.draw(_draw_button);
+
+
+    alert_win.end();
+    alert_win.hide();
+    alert_win.make_modal(true);
+
+    return alert_win;
 }

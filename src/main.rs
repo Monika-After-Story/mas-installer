@@ -101,7 +101,7 @@ fn main() {
     let license_win = builder::build_license_win(sender);
     let dir_sel_win = builder::build_select_dir_win(sender, path_txt_buf.clone());
     let options_win = builder::build_options_win(sender, is_deluxe_version);
-    let mut progress_win = builder::build_propgress_win(sender, &progress_bar);
+    let progress_win = builder::build_propgress_win(sender, &progress_bar);
 
 
     main_win.end();
@@ -111,7 +111,8 @@ fn main() {
         welcome_win,
         license_win,
         dir_sel_win,
-        options_win
+        options_win,
+        progress_win
     ];
 
     main_win.show();
@@ -123,6 +124,7 @@ fn main() {
                     progress_bar.set_value(val);
                 },
                 Message::Close => {
+                    println!("Quitting");
                     break;
                 },
                 Message::NextPage => {
@@ -144,8 +146,8 @@ fn main() {
                     is_deluxe_version = !is_deluxe_version;
                 },
                 Message::Install => {
-                    utils::hide_current_win(&mut windows, current_win_id);
-                    progress_win.show();
+                    // We also need to move to the next window
+                    sender.send(Message::NextPage);
                     installer_th_handle = Some(
                         utils::install_game_in_thread(&extraction_dir, sender, &abort_flag, is_deluxe_version)
                     );
@@ -168,10 +170,14 @@ fn main() {
                 },
                 Message::Error => {
                     utils::set_flag(&abort_flag, true);
-                    let _rv = cleanup_th_handle(installer_th_handle);
+                    let rv = cleanup_th_handle(installer_th_handle);
                     // We've moved the handle, set it to None
                     installer_th_handle = None;
-                    // Request exit
+                    // Show the error if we can
+                    if let Some(e) = rv {
+                        utils::run_alert_dlg(&format!("{}", e));
+                    }
+                    // Let's just quit
                     sender.send(Message::Close);
                 },
                 Message::Abort => {

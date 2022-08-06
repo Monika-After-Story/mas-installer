@@ -16,7 +16,8 @@ use fltk::{
     image,
     app::{
         add_handler,
-        Sender
+        Sender,
+        wait
     },
     dialog::{
         NativeFileChooser,
@@ -70,20 +71,20 @@ pub fn switch_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize, new_i
     *current_id = new_id;
 }
 
-pub fn hide_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
-    if current_id >= windows.len() {
-        return;
-    }
-    windows[current_id].hide();
-}
+// pub fn hide_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
+//     if current_id >= windows.len() {
+//         return;
+//     }
+//     windows[current_id].hide();
+// }
 
-#[allow(dead_code)]
-pub fn show_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
-    if current_id >= windows.len() {
-        return;
-    }
-    windows[current_id].show();
-}
+// #[allow(dead_code)]
+// pub fn show_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
+//     if current_id >= windows.len() {
+//         return;
+//     }
+//     windows[current_id].show();
+// }
 
 
 /// Loads icon data and sets it as window icon
@@ -127,6 +128,19 @@ pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
     c.show();
 
     return c.filename();
+}
+
+/// Launches alert dialogue
+/// NOTE: modal
+pub fn run_alert_dlg(msg: &str) {
+    let mut win = crate::builder::build_alert_win(
+        msg
+    );
+    win.show();
+    while win.shown() {
+        wait();
+    }
+    drop(win);
 }
 
 
@@ -416,7 +430,7 @@ pub fn install_game_in_thread(
 ) -> thread::JoinHandle<InstallResult> {
 
     let destination_dir = destination_dir.clone();
-    let sender = sender.clone();
+    // let sender = sender.clone();
     let abort_flag = abort_flag.clone();
 
     return thread::spawn(
