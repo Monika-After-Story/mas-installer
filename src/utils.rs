@@ -4,7 +4,7 @@ use std::{
     fs::{File, create_dir_all},
     io,
     cmp::{min},
-    thread::{self, sleep},
+    thread,
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering}
@@ -143,6 +143,11 @@ pub fn set_flag(flag: &Arc<AtomicBool>, value: bool) {
 }
 
 
+fn sleep() {
+    thread::sleep(PAUSE_DURATION);
+}
+
+
 /// Builds a client for this installer to access GitHub API
 pub fn build_client() -> Result<req_blocking::Client, InstallerError> {
     use headers::HeaderValue;
@@ -248,7 +253,7 @@ fn _download_to_file(
         low_bound += bound_inc;
         up_bound = min(up_bound+bound_inc, content_size+1);
         // Slep to let the server rest
-        sleep(PAUSE_DURATION);
+        sleep();
         // See if we want to abort
         if get_flag(abort_flag) {
             return Ok(());
@@ -355,14 +360,14 @@ pub fn install_game(
     };
     let download_link = String::from("https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.9/spritepacks-combined.zip");
     sender.send(Message::UpdateProgressBar(0.5));
-    sleep(PAUSE_DURATION);
+    sleep();
 
     // Create temp structures
     let temp_dir = _create_temp_dir()?;
     let mut temp_file = _create_temp_file(&temp_dir)?;
 
     sender.send(Message::UpdateProgressBar(1.0));
-    sleep(PAUSE_DURATION);
+    sleep();
 
     // Install
     sender.send(Message::Downloading);
@@ -373,7 +378,7 @@ pub fn install_game(
         &download_link,
         &mut temp_file
     )?;
-    sleep(PAUSE_DURATION);
+    sleep();
 
     sender.send(Message::Extracting);
     _extract_archive(
@@ -382,14 +387,14 @@ pub fn install_game(
         &temp_file,
         destination_dir
     )?;
-    sleep(PAUSE_DURATION);
+    sleep();
 
     sender.send(Message::CleaningUp);
     sender.send(Message::UpdateProgressBar(0.0));
     drop(temp_file);
-    sleep(PAUSE_DURATION);
+    sleep();
     sender.send(Message::UpdateProgressBar(1.0));
-    sleep(PAUSE_DURATION);
+    sleep();
 
     sender.send(Message::Done);
 
