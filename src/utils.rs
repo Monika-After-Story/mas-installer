@@ -378,6 +378,9 @@ pub fn install_game(
         &download_link,
         &mut temp_file
     )?;
+    if get_flag(abort_flag) {
+        return Ok(());
+    }
     sleep();
 
     sender.send(Message::Extracting);
@@ -387,6 +390,9 @@ pub fn install_game(
         &temp_file,
         destination_dir
     )?;
+    if get_flag(abort_flag) {
+        return Ok(());
+    }
     sleep();
 
     sender.send(Message::CleaningUp);
