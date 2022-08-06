@@ -5,7 +5,13 @@ mod errors;
 mod utils;
 
 
-use std::thread;
+use std::{
+    thread,
+    sync::{
+        Arc,
+        atomic::AtomicBool
+    }
+};
 
 use fltk::{
     app::{
@@ -63,6 +69,7 @@ pub enum Message {
     Extracting,
     CleaningUp,
     Error,
+    Abort,
     Done
 }
 
@@ -73,9 +80,11 @@ type InstallResult = Result<(), InstallerError>;
 fn main() {
     utils::disable_global_hotkeys();
 
+    // Some things our program will use
     let (sender, receiver): (Sender<Message>, Receiver<Message>) = channel();
-    let mut is_deluxe_version: bool = true;
+    let abort_flag = Arc::new(AtomicBool::new(false));
     let mut installer_th_handle: Option<thread::JoinHandle<InstallResult>> = None;
+    let mut is_deluxe_version: bool = true;
     let mut extraction_dir = utils::get_cwd();
     let mut path_txt_buf = TextBuffer::default();
     path_txt_buf.set_text(extraction_dir.to_str().unwrap_or_default());
@@ -138,7 +147,7 @@ fn main() {
                     utils::hide_current_win(&mut windows, current_win_id);
                     progress_win.show();
                     installer_th_handle = Some(
-                        utils::install_game_in_thread(&extraction_dir, sender, is_deluxe_version)
+                        utils::install_game_in_thread(&extraction_dir, sender, &abort_flag, is_deluxe_version)
                     );
                 },
                 Message::Preparing => {
@@ -158,10 +167,15 @@ fn main() {
                     progress_bar.set_label("Cleaning up...");
                 },
                 Message::Error => {
+                    utils::set_flag(&abort_flag, true);
                     let _rv = cleanup_th_handle(installer_th_handle);
                     // We've moved the handle, set it to None
                     installer_th_handle = None;
                     // Request exit
+                    sender.send(Message::Close);
+                },
+                Message::Abort => {
+                    utils::set_flag(&abort_flag, true);
                     sender.send(Message::Close);
                 },
                 Message::Done => {

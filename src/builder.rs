@@ -306,7 +306,7 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
     let welcome_but_pack = _build_welcome_win_pack();
     welcome_but_pack.begin();
 
-    build_button(BUT_ABORT_LABEL, sender, Message::Close);
+    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
     build_button(BUT_CONTINUE_LABEL, sender, Message::NextPage);
 
     welcome_but_pack.end();
@@ -374,7 +374,7 @@ fn _build_ternary_but_pack(
 fn _build_abort_back_contn_pack(sender: Sender<Message>) {
     _build_ternary_but_pack(
         sender,
-        (BUT_ABORT_LABEL, Message::Close),
+        (BUT_ABORT_LABEL, Message::Abort),
         (BUT_BACK_LABEL, Message::PrevPage),
         (BUT_CONTINUE_LABEL, Message::NextPage)
     );
@@ -385,7 +385,7 @@ fn _build_abort_back_contn_pack(sender: Sender<Message>) {
 fn _build_abort_back_inst_pack(sender: Sender<Message>) {
     _build_ternary_but_pack(
         sender,
-        (BUT_ABORT_LABEL, Message::Close),
+        (BUT_ABORT_LABEL, Message::Abort),
         (BUT_BACK_LABEL, Message::PrevPage),
         (BUT_INSTALL_LABEL, Message::Install)
     );
@@ -485,6 +485,7 @@ pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> Doubl
 }
 
 
+/// Builds a progress bar
 pub fn build_progress_bar() -> Progress {
     let mut bar = Progress::default()
         .with_size(WIN_WIDTH-2*WIN_PADDING, BUT_HEIGHT)
@@ -508,7 +509,7 @@ pub fn build_propgress_win(sender: Sender<Message>, bar: &Progress) -> DoubleWin
 
     const PAD_X: i32 = 50;
     const PAD_Y: i32 = WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT-25;
-    let mut abrt_but = build_button(BUT_ABORT_LABEL, sender, Message::Close);
+    let mut abrt_but = build_button(BUT_ABORT_LABEL, sender, Message::Abort);
     abrt_but.set_pos(PAD_X, PAD_Y);
 
     progress_win.add(bar);

@@ -5,6 +5,10 @@ use std::{
     io,
     cmp::{min},
     thread::{self, sleep},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering}
+    },
     time::Duration
 };
 
@@ -126,6 +130,19 @@ pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
 }
 
 
+/// Checks atomic bool within an arc and returns its value
+/// NOTE: USES Ordering::Relaxed
+pub fn get_flag(flag: &Arc<AtomicBool>) -> bool {
+    return flag.load(Ordering::Relaxed);
+}
+
+/// Sets atomic bool within an arc and returns its value
+/// NOTE: USES Ordering::Relaxed
+pub fn set_flag(flag: &Arc<AtomicBool>, value: bool) {
+    flag.store(value, Ordering::Relaxed);
+}
+
+
 /// Builds a client for this installer to access GitHub API
 pub fn build_client() -> Result<req_blocking::Client, InstallerError> {
     use headers::HeaderValue;
@@ -174,10 +191,15 @@ fn _get_assets_links(client: &req_blocking::Client) -> Result<(String, String), 
 fn _download_to_file(
     client: &req_blocking::Client,
     sender: Sender<Message>,
+    abort_flag: &Arc<AtomicBool>,
     download_link: &String,
     file: &mut File
 ) -> Result<(), DownloadError> {
     const DEF_CHUNK_SIZE: u128 = 1024*1024*8 + 1;
+
+    if get_flag(abort_flag) {
+        return Ok(());
+    }
 
     sender.send(Message::UpdateProgressBar(0.0));
 
@@ -227,6 +249,10 @@ fn _download_to_file(
         up_bound = min(up_bound+bound_inc, content_size+1);
         // Slep to let the server rest
         sleep(PAUSE_DURATION);
+        // See if we want to abort
+        if get_flag(abort_flag) {
+            return Ok(());
+        }
     }
 
     // println!("Total downloaded: {}", total_downloaded);
@@ -237,9 +263,14 @@ fn _download_to_file(
 /// Extracts a zip archive
 fn _extract_archive(
     sender: Sender<Message>,
+    abort_flag: &Arc<AtomicBool>,
     archive: &File,
     destination_dir: &PathBuf
 ) -> Result<(), ExtractionError> {
+    if get_flag(abort_flag) {
+        return Ok(());
+    }
+
     sender.send(Message::UpdateProgressBar(0.0));
 
     let mut archive = ZipArchive::new(archive)?;
@@ -269,9 +300,15 @@ fn _extract_archive(
             let mut outfile = File::create(&extraction_path)?;
             io::copy(&mut file, &mut outfile)?;
         }
+
         // Update progres bar
         let pb_val = (i as f64 + 1.0) / total_files as f64;
         sender.send(Message::UpdateProgressBar(pb_val));
+
+        // See if we want to abort
+        if get_flag(abort_flag) {
+            return Ok(());
+        }
     }
     return Ok(());
 }
@@ -298,10 +335,15 @@ fn _create_temp_file(temp_dir: &tempfile::TempDir) -> Result<File, io::Error> {
 pub fn install_game(
     destination_dir: &PathBuf,
     sender: Sender<Message>,
+    abort_flag: &Arc<AtomicBool>,
     is_deluxe: bool
 ) -> InstallResult {
     sender.send(Message::Preparing);
     sender.send(Message::UpdateProgressBar(0.0));
+
+    if get_flag(abort_flag) {
+        return Ok(());
+    }
 
     let client = build_client()?;
 
@@ -327,6 +369,7 @@ pub fn install_game(
     _download_to_file(
         &client,
         sender,
+        abort_flag,
         &download_link,
         &mut temp_file
     )?;
@@ -335,6 +378,7 @@ pub fn install_game(
     sender.send(Message::Extracting);
     _extract_archive(
         sender,
+        abort_flag,
         &temp_file,
         destination_dir
     )?;
@@ -356,15 +400,17 @@ pub fn install_game(
 pub fn install_game_in_thread(
     destination_dir: &PathBuf,
     sender: Sender<Message>,
+    abort_flag: &Arc<AtomicBool>,
     is_deluxe: bool
 ) -> thread::JoinHandle<InstallResult> {
 
     let destination_dir = destination_dir.clone();
     let sender = sender.clone();
+    let abort_flag = abort_flag.clone();
 
     return thread::spawn(
         move || -> InstallResult {
-            return match install_game(&destination_dir, sender, is_deluxe) {
+            return match install_game(&destination_dir, sender, &abort_flag, is_deluxe) {
                 Err(e) => {
                     sender.send(Message::Error);
                     Err(e)
