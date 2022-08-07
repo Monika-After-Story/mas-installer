@@ -5,6 +5,7 @@ authors = ["Booplicate"]
 description = "Custom cross-platform installer for Monika After Story"
 repository = "https://github.com/Monika-After-Story/mas-installer/"
 edition = "2021"
+build = "build/build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,6 +18,11 @@ tempfile = "=3.3.0"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "=0.1.12"
+
+[package.metadata.winres]
+ProductName = "Monika After Story Installer"
+FileDescription = "Installer for Monika After Story"
+CompanyName = "Monika After Story Team"
 
 [features]
 default = ["compile_static"]
