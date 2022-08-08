@@ -138,7 +138,7 @@ pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
     match c.set_directory(&cwd) {
         Err(err) => eprintln!("Failed to automatically set default dir: {err}"),
         Ok(_) => {}
-    }
+    };
 
     c.show();
 

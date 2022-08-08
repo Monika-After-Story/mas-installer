@@ -104,6 +104,7 @@ fn main() {
     let options_win = builder::build_options_win(sender, is_deluxe_version);
     let progress_win = builder::build_propgress_win(sender, &progress_bar);
     let mut abort_win = builder::build_abort_win(sender);
+    let mut done_win = builder::build_done_win(sender);
 
 
     main_win.end();
@@ -126,7 +127,7 @@ fn main() {
                     progress_bar.set_value(val);
                 },
                 Message::Close => {
-                    println!("Quitting");
+                    println!("Quitting...");
                     break;
                 },
                 Message::NextPage => {
@@ -144,6 +145,10 @@ fn main() {
                 },
                 Message::DlxVersionCheck => {
                     is_deluxe_version = !is_deluxe_version;
+                    match is_deluxe_version {
+                        true => println!("Using deluxe version..."),
+                        false => println!("Using standard version...")
+                    };
                 },
                 Message::Install => {
                     // We also need to move to the next window
@@ -156,22 +161,23 @@ fn main() {
                     );
                 },
                 Message::Preparing => {
-                    println!("Preparing");
+                    println!("Preparing...");
                     progress_bar.set_label("Preparing...");
                 },
                 Message::Downloading => {
-                    println!("Downloading");
+                    println!("Done!\nDownloading...");
                     progress_bar.set_label("Downloading...");
                 },
                 Message::Extracting => {
-                    println!("Extracting");
+                    println!("Done!\nExtracting...");
                     progress_bar.set_label("Extracting...");
                 },
                 Message::CleaningUp => {
-                    println!("Cleaning up");
+                    println!("Done!\nCleaning up...");
                     progress_bar.set_label("Cleaning up...");
                 },
                 Message::Error => {
+                    println!("An error has occurred...");
                     utils::set_flag(&abort_flag, true);
                     let rv = cleanup_th_handle(installer_th_handle);
                     // We've moved the handle, set it to None
@@ -184,6 +190,7 @@ fn main() {
                     sender.send(Message::Close);
                 },
                 Message::Abort => {
+                    println!("Installation has been aborted!");
                     utils::set_flag(&abort_flag, true);
                     cleanup_th_handle(installer_th_handle);
                     installer_th_handle = None;
@@ -191,10 +198,11 @@ fn main() {
                     abort_win.show();
                 },
                 Message::Done => {
-                    println!("Done");
-                    sender.send(Message::Close);
+                    println!("Installation is complete!");
+                    utils::hide_current_win(&mut windows, current_win_id);
+                    done_win.show();
                 }
-            }
+            };
         }
     }
     cleanup_th_handle(installer_th_handle);
@@ -214,7 +222,7 @@ fn cleanup_th_handle(th_handle: Option<thread::JoinHandle<InstallResult>>) -> Op
                     return Some(e);
                 }
             }
-        }
+        };
     }
     return None;
 }

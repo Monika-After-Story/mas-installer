@@ -93,3 +93,4 @@ pub const SELECT_DIR_FRAME_LABEL: &str = "Select Doki Doki Literature Club direc
 pub const OPTIONS_FRAME_LABEL: &str = "Select additional settings";
 pub const PROGRESS_FRAME_LABEL: &str = "Installing, please wait";
 pub const ABORT_FRAME_LABEL: &str = "Installation aborted";
+pub const DONE_FRAME_LABEL: &str = "Monika After Story is now installed\non your computer";

@@ -618,6 +618,14 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
     return alert_win;
 }
 
+
+fn _build_exit_button(sender: Sender<Message>) -> Button {
+    let mut but = build_button(BUT_EXIT_LABEL, sender, Message::Close);
+    but.set_pos(INNER_WIN_WIDTH-BUT_WIDTH-50, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
+
+    return but;
+}
+
 /// Builds the abort windows
 pub fn build_abort_win(sender: Sender<Message>) -> DoubleWindow {
     let abort_win = build_inner_win();
@@ -625,10 +633,23 @@ pub fn build_abort_win(sender: Sender<Message>) -> DoubleWindow {
 
     _build_top_frame(ABORT_FRAME_LABEL);
 
-    let mut but = build_button(BUT_EXIT_LABEL, sender, Message::Close);
-    but.set_pos(INNER_WIN_WIDTH-BUT_WIDTH-50, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
+    _build_exit_button(sender);
 
     abort_win.end();
 
     return abort_win;
+}
+
+/// Builds the done windows
+pub fn build_done_win(sender: Sender<Message>) -> DoubleWindow {
+    let done_win = build_inner_win();
+    done_win.begin();
+
+    _build_top_frame(DONE_FRAME_LABEL);
+
+    _build_exit_button(sender);
+
+    done_win.end();
+
+    return done_win;
 }
