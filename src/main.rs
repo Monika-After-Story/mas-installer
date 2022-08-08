@@ -127,7 +127,6 @@ fn main() {
                     progress_bar.set_value(val);
                 },
                 Message::Close => {
-                    println!("Quitting...");
                     break;
                 },
                 Message::NextPage => {
