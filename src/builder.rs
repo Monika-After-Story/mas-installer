@@ -522,6 +522,23 @@ pub fn build_propgress_win(sender: Sender<Message>, bar: &Progress) -> DoubleWin
 }
 
 
+/// Formats a message to
+/// text:
+///     more text:
+///         even more text
+fn __format_alert_msg(msg: &str) -> String {
+    let mut rv = String::new();
+    let mut n: usize = 1;
+
+    for s in msg.split(": ") {
+        rv.push_str(s);
+        rv.push_str("\n");
+        rv.push_str(&"    ".repeat(n));
+        n += 1;
+    }
+    return rv;
+}
+
 /// Builds an alert window to show a warning to the user
 pub fn build_alert_win(msg: &str) -> DoubleWindow {
     let (sw, sh) = screen_size();
@@ -544,17 +561,10 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
     // frame.set_label_color(C_DDLC_PINK_DARK);
     // frame.set_label_size(15);
 
-    let mut tmp_string = String::new();
-    let mut n: usize = 1;
-    for s in msg.split(": ") {
-        tmp_string.push_str(s);
-        tmp_string.push_str("\n");
-        tmp_string.push_str(&"    ".repeat(n));
-        n += 1;
-    }
-
     let mut buf = TextBuffer::default();
-    buf.set_text(&tmp_string);
+    buf.set_text(
+        &__format_alert_msg(msg)
+    );
 
     let mut txt = TextDisplay::default()
         .with_size(
