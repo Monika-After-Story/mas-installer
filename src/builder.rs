@@ -142,21 +142,38 @@ fn _draw_button(b: &mut Button) {
     __draw_button_widget(b);
 }
 
-fn _build_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message) -> Button {
+fn _build_button_base<H, D>(width: i32, height: i32, label: &str, handler: H, draw: D) -> Button
+where
+    H: FnMut(&mut Button, Event) -> bool + 'static,
+    D: FnMut(&mut Button) + 'static
+{
     let mut but = Button::default()
         .with_size(width, height)
         .with_label(label);
 
     but.visible_focus(false);
+    but.handle(handler);
+    but.draw(draw);
+
+    return but;
+}
+
+fn _build_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message) -> Button {
+    let mut but = _build_button_base(
+        width,
+        height,
+        label,
+        _handle_button,
+        _draw_button
+    );
     but.emit(sender, msg);
-    but.handle(_handle_button);
-    but.draw(_draw_button);
 
     return but;
 }
 
 /// Builds a button with the given label, sender, and msg
 /// The button won't be automatically position
+/// width, height, ev handler, and draw func are pre-defined
 pub fn build_button(label: &str, sender: Sender<Message>, msg: Message) -> Button {
     let but = _build_button(
         BUT_WIDTH,
@@ -225,6 +242,7 @@ fn _draw_check_button(b: &mut CheckButton) {
 }
 
 /// Builds a check button with the given parameters
+/// ev handler, and draw func are pre-defined
 fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message) -> CheckButton {
     let mut but = CheckButton::default()
         .with_size(width, height)
@@ -574,21 +592,23 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
         .with_pos(0, 0);
     txt.set_buffer(buf);
 
-    let mut but = Button::default()
-        .with_size(BUT_WIDTH, BUT_HEIGHT)
-        .with_pos(
-            ALERT_WIN_WIDTH/2 - BUT_WIDTH/2,
-            ALERT_WIN_HEIGHT - BUT_HEIGHT - BUT_ALERT_WIN_PADDING
-        )
-        .with_label(BUT_ALERT_OK_LABEL);
 
-    but.visible_focus(false);
-    but.handle(_handle_button);
+    let mut but = _build_button_base(
+        BUT_WIDTH,
+        BUT_HEIGHT,
+        BUT_ALERT_OK_LABEL,
+        _handle_button,
+        _draw_button
+    );
+
+    but.set_pos(
+        ALERT_WIN_WIDTH/2 - BUT_WIDTH/2,
+        ALERT_WIN_HEIGHT - BUT_HEIGHT - BUT_ALERT_WIN_PADDING
+    );
     but.set_callback({
         let mut win = alert_win.clone();
         move |_| win.hide()
     });
-    but.draw(_draw_button);
 
 
     alert_win.end();
