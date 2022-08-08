@@ -18,6 +18,9 @@ pub const WIN_HEIGHT: i32 = 500;
 
 pub const WIN_PADDING: i32 = 4;
 
+pub const INNER_WIN_WIDTH: i32 = WIN_WIDTH - 2*WIN_PADDING;
+pub const INNER_WIN_HEIGHT: i32 = WIN_HEIGHT - 2*WIN_PADDING;
+
 pub const ALERT_WIN_WIDTH: i32 = 500;
 pub const ALERT_WIN_HEIGHT: i32 = 200;
 
@@ -41,8 +44,10 @@ pub const BUT_SELECT_DIR_LABEL: &str = " Select directory @fileopen";
 pub const BUT_USE_DLX_VERSION_LABEL: &str = "Deluxe version (pre-installed spritepacks)";
 pub const BUT_INSTALL_LABEL: &str = " Install";
 pub const BUT_ALERT_OK_LABEL: &str = "Ok";
+pub const BUT_EXIT_LABEL: &str = "Exit";
 
 pub const BUT_ALERT_WIN_PADDING: i32 = 10;
+pub const BUT_PACK_YPADDING: i32 = 25;
 
 
 // Frame consts

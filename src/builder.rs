@@ -74,7 +74,7 @@ pub fn build_outer_win() -> DoubleWindow {
 /// Inner windows are included into the main window. User can switch between them
 pub fn build_inner_win() -> DoubleWindow {
     let mut inner_win = Window::default()
-        .with_size(WIN_WIDTH - WIN_PADDING*2, WIN_HEIGHT - WIN_PADDING*2)
+        .with_size(INNER_WIN_WIDTH, INNER_WIN_HEIGHT)
         .with_pos(WIN_PADDING, WIN_PADDING);
     inner_win.set_color(C_DDLC_WHITE_IDLE);
 
@@ -274,7 +274,7 @@ fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Mess
 /// Builds a frame at the given position
 fn _build_frame(xpos: i32, ypos: i32) -> Frame {
     let frame = Frame::default()
-        .with_size(WIN_WIDTH-WIN_PADDING*2-xpos, WIN_HEIGHT-WIN_PADDING*2-ypos)
+        .with_size(INNER_WIN_WIDTH-xpos, INNER_WIN_HEIGHT-ypos)
         .with_pos(xpos, ypos);
         // .with_align(Align::Top | Align::Inside)
         // .with_label(label);
@@ -300,14 +300,14 @@ fn _build_top_frame(label: &str) -> Frame {
 fn _build_welcome_win_pack() -> Pack {
     const TOTAL_ITEMS: i32 = 2;
     const PAD_X: i32 = 50;
-    let pad_y: i32 = WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT-25;//mul_int_float(WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT, 0.9);
+    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
 
     let mut pack = Pack::default()
-        .with_size(WIN_WIDTH-WIN_PADDING*2-PAD_X*2, BUT_HEIGHT)
-        .with_pos(PAD_X, pad_y)
+        .with_size(INNER_WIN_WIDTH-PAD_X*2, BUT_HEIGHT)
+        .with_pos(PAD_X, PAD_Y)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-    pack.set_spacing(WIN_WIDTH-WIN_PADDING*2 - BUT_WIDTH*TOTAL_ITEMS - PAD_X*2);
+    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH*TOTAL_ITEMS - PAD_X*2);
 
     pack.end();
 
@@ -352,14 +352,14 @@ fn _build_ternary_inner_pack() -> Pack {
 
 fn _build_ternary_outer_pack(spacing: i32) -> Pack {
     const PAD_X: i32 = 50;
-    let pad_y: i32 = WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT-25;//mul_int_float(WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT, 0.9);
+    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
 
     let mut pack = Pack::default()
-        .with_size(WIN_WIDTH-WIN_PADDING*2-PAD_X*2, BUT_HEIGHT)
-        .with_pos(PAD_X, pad_y)
+        .with_size(INNER_WIN_WIDTH-PAD_X*2, BUT_HEIGHT)
+        .with_pos(PAD_X, PAD_Y)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-    pack.set_spacing(WIN_WIDTH-WIN_PADDING*2 - BUT_WIDTH - spacing - PAD_X*2);
+    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH - spacing - PAD_X*2);
 
     pack.end();
 
@@ -423,7 +423,7 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     buf.set_text(APP_LICENSE);
 
     let mut txt = TextDisplay::default()
-        .with_size(WIN_WIDTH-WIN_PADDING*2, 310)
+        .with_size(INNER_WIN_WIDTH, 310)
         .with_pos(0, 100);
     txt.set_buffer(buf);
 
@@ -445,14 +445,14 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
     _build_top_frame(SELECT_DIR_FRAME_LABEL);
 
     let mut pack = Pack::default()
-        .with_size(WIN_WIDTH-WIN_PADDING*2, SEL_DIR_TXT_HEIGHT)
+        .with_size(INNER_WIN_WIDTH, SEL_DIR_TXT_HEIGHT)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
     pack = pack.center_of_parent();
     pack.begin();
 
     let mut txt = TextDisplay::default()
-        .with_size(WIN_WIDTH-WIN_PADDING*2-BUT_SEL_DIR_WIDTH, SEL_DIR_TXT_HEIGHT);
+        .with_size(INNER_WIN_WIDTH-BUT_SEL_DIR_WIDTH, SEL_DIR_TXT_HEIGHT);
     txt.set_text_size(SEL_DIR_TXT_SIZE);
     txt.wrap_mode(WrapMode::None, 0);
     txt.set_buffer(txt_buf);
@@ -481,8 +481,8 @@ pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> Doubl
 
     const BUT_USE_DLX_VERSION_WIDTH: i32 = BUT_WIDTH+225;
     const TOTAL_BUTS: i32 = 1;
-    const XPOS: i32 = (WIN_WIDTH-WIN_PADDING*2)/2 - BUT_USE_DLX_VERSION_WIDTH/2;
-    const YPOS: i32 = (WIN_HEIGHT-WIN_PADDING*2)/2 - TOTAL_BUTS*BUT_HEIGHT/2;
+    const XPOS: i32 = INNER_WIN_WIDTH/2 - BUT_USE_DLX_VERSION_WIDTH/2;
+    const YPOS: i32 = INNER_WIN_HEIGHT/2 - TOTAL_BUTS*BUT_HEIGHT/2;
 
     let mut but_inst_dlx = _build_check_button(
         BUT_USE_DLX_VERSION_WIDTH,
@@ -527,7 +527,7 @@ pub fn build_propgress_win(sender: Sender<Message>, bar: &Progress) -> DoubleWin
     _build_top_frame(PROGRESS_FRAME_LABEL);
 
     const PAD_X: i32 = 50;
-    const PAD_Y: i32 = WIN_HEIGHT-WIN_PADDING-BUT_HEIGHT-25;
+    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
     let mut abrt_but = build_button(BUT_ABORT_LABEL, sender, Message::Abort);
     abrt_but.set_pos(PAD_X, PAD_Y);
 
@@ -616,4 +616,19 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
     alert_win.make_modal(true);
 
     return alert_win;
+}
+
+/// Builds the abort windows
+pub fn build_abort_win(sender: Sender<Message>) -> DoubleWindow {
+    let mut welcome_win = build_inner_win();
+    welcome_win.show();
+    welcome_win.begin();
+
+    _build_top_frame(WELCOME_FRAME_LABEL);
+
+    let but = build_button(BUT_EXIT_LABEL, sender, Message::Close);
+
+    welcome_win.end();
+
+    return welcome_win;
 }
