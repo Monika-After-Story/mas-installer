@@ -103,6 +103,7 @@ fn main() {
     let dir_sel_win = builder::build_select_dir_win(sender, path_txt_buf.clone());
     let options_win = builder::build_options_win(sender, is_deluxe_version);
     let progress_win = builder::build_propgress_win(sender, &progress_bar);
+    let mut abort_win = builder::build_abort_win(sender);
 
 
     main_win.end();
@@ -184,8 +185,10 @@ fn main() {
                 },
                 Message::Abort => {
                     utils::set_flag(&abort_flag, true);
-                    utils::run_alert_dlg("The installation process has been aborted");
-                    sender.send(Message::Close);
+                    cleanup_th_handle(installer_th_handle);
+                    installer_th_handle = None;
+                    utils::hide_current_win(&mut windows, current_win_id);
+                    abort_win.show();
                 },
                 Message::Done => {
                     println!("Done");

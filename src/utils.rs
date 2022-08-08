@@ -71,12 +71,12 @@ pub fn switch_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize, new_i
     *current_id = new_id;
 }
 
-// pub fn hide_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
-//     if current_id >= windows.len() {
-//         return;
-//     }
-//     windows[current_id].hide();
-// }
+pub fn hide_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
+    if current_id >= windows.len() {
+        return;
+    }
+    windows[current_id].hide();
+}
 
 // #[allow(dead_code)]
 // pub fn show_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {

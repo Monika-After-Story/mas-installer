@@ -92,3 +92,4 @@ pub const LICENSE_FRAME_LABEL: &str = "By continuing you agree with our license"
 pub const SELECT_DIR_FRAME_LABEL: &str = "Select Doki Doki Literature Club directory";
 pub const OPTIONS_FRAME_LABEL: &str = "Select additional settings";
 pub const PROGRESS_FRAME_LABEL: &str = "Installing, please wait";
+pub const ABORT_FRAME_LABEL: &str = "Installation aborted";
