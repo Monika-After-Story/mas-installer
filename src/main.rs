@@ -153,6 +153,10 @@ fn main() {
                     };
                 },
                 Message::Install => {
+                    // We warn the user again if the extraction dir looks wrong
+                    if !utils::is_valid_ddlc_dir(&extraction_dir) {
+                        utils::run_msg_dlg("Warning!\nSelected directory doesn't appear to be\na valid DDLC directory");
+                    }
                     // We also need to move to the next window
                     sender.send(Message::NextPage);
                     // Consume any existing thread first
