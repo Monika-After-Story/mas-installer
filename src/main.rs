@@ -129,12 +129,10 @@ fn main() {
                     break;
                 },
                 Message::NextPage => {
-                    let new_id = current_win_id+1;
-                    utils::switch_win(&mut windows, &mut current_win_id, new_id);
+                    utils::show_next_win(&mut windows, &mut current_win_id);
                 },
                 Message::PrevPage => {
-                    let new_id = current_win_id-1;
-                    utils::switch_win(&mut windows, &mut current_win_id, new_id);
+                    utils::show_previous_win(&mut windows, &mut current_win_id);
                 },
                 Message::SelectDir => {
                     let selected_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
@@ -186,6 +184,7 @@ fn main() {
                 },
                 Message::Abort => {
                     utils::set_flag(&abort_flag, true);
+                    utils::run_alert_dlg("The installation process has been aborted");
                     sender.send(Message::Close);
                 },
                 Message::Done => {

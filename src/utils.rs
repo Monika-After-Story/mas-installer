@@ -86,6 +86,21 @@ pub fn switch_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize, new_i
 //     windows[current_id].show();
 // }
 
+/// Hides current and shows next (current id + 1) window
+pub fn show_next_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize) {
+    switch_win(windows, current_id, *current_id+1);
+}
+
+/// Hides current and shows previous (current id - 1) window
+pub fn show_previous_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize) {
+    let cur_id = *current_id;
+    // Just so we don't get overflow
+    if cur_id == 0 {
+        return;
+    }
+    switch_win(windows, current_id, cur_id-1);
+}
+
 
 /// Loads icon data and sets it as window icon
 pub fn load_icon(win: &mut DoubleWindow) {
