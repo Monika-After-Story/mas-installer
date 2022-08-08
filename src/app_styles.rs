@@ -9,7 +9,9 @@ use fltk::{
 // App title
 pub const WIN_TITLE: &str = "Monika After Story Installer";
 // Err window title
-pub const ALERT_WIN_TITLE: &str = "Error";
+pub const ALERT_WIN_TITLE: &str = "Error!";
+// Msg window title
+pub const MSG_WIN_TITLE: &str = "Attention!";
 
 
 // Window consts
@@ -43,7 +45,7 @@ pub const BUT_CONTINUE_LABEL: &str = " Continue@>";
 pub const BUT_SELECT_DIR_LABEL: &str = " Select directory @fileopen";
 pub const BUT_USE_DLX_VERSION_LABEL: &str = "Deluxe version (pre-installed spritepacks)";
 pub const BUT_INSTALL_LABEL: &str = " Install";
-pub const BUT_ALERT_OK_LABEL: &str = "Ok";
+pub const BUT_OK_LABEL: &str = "Ok";
 pub const BUT_EXIT_LABEL: &str = "Exit";
 
 pub const BUT_ALERT_WIN_PADDING: i32 = 10;

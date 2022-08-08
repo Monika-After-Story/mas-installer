@@ -215,6 +215,19 @@ pub fn run_alert_dlg(msg: &str) {
     drop(win);
 }
 
+/// Launches message dialogue
+/// NOTE: modal
+pub fn run_msg_dlg(msg: &str) {
+    let mut win = crate::builder::build_msg_win(
+        msg
+    );
+    win.show();
+    while win.shown() {
+        wait();
+    }
+    drop(win);
+}
+
 
 /// Checks atomic bool within an arc and returns its value
 /// NOTE: USES Ordering::Relaxed
