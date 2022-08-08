@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 // #![allow(dead_code, unused_imports, unused_mut, unused_variables)]// TODO: remove me
 mod app_styles;
 mod builder;
