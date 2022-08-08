@@ -148,6 +148,9 @@ fn main() {
                 Message::Install => {
                     // We also need to move to the next window
                     sender.send(Message::NextPage);
+                    // Consume any existing thread first
+                    cleanup_th_handle(installer_th_handle);
+                    // Start a new thread
                     installer_th_handle = Some(
                         utils::install_game_in_thread(&extraction_dir, sender, &abort_flag, is_deluxe_version)
                     );
