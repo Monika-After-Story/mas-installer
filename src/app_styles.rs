@@ -26,6 +26,9 @@ pub const INNER_WIN_HEIGHT: i32 = WIN_HEIGHT - 2*WIN_PADDING;
 pub const ALERT_WIN_WIDTH: i32 = 500;
 pub const ALERT_WIN_HEIGHT: i32 = 200;
 
+pub const MSG_WIN_WIDTH: i32 = ALERT_WIN_WIDTH;
+pub const MSG_WIN_HEIGHT: i32 = ALERT_WIN_HEIGHT;
+
 
 // Buttons consts
 pub const BUT_WIDTH: i32 = 130;
@@ -49,6 +52,7 @@ pub const BUT_OK_LABEL: &str = "Ok";
 pub const BUT_EXIT_LABEL: &str = "Exit";
 
 pub const BUT_ALERT_WIN_PADDING: i32 = 10;
+pub const BUT_MSG_WIN_PADDING: i32 = BUT_ALERT_WIN_PADDING;
 pub const BUT_PACK_YPADDING: i32 = 25;
 
 
@@ -56,6 +60,8 @@ pub const BUT_PACK_YPADDING: i32 = 25;
 pub const TOP_FRAME_LABEL_SIZE: i32 = 28;
 pub const TOP_FRAME_XPOS: i32 = 0;
 pub const TOP_FRAME_YPOS: i32 = 15;
+
+pub const MSG_FRAME_LABEL_SIZE: i32 = 20;
 
 
 // Text consts

@@ -138,7 +138,7 @@ fn main() {
                 Message::SelectDir => {
                     let selected_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
                     if !utils::is_valid_ddlc_dir(&selected_dir) {
-                        utils::run_msg_dlg("Warning! Selected directory doesn't appear to be\na valid DDLC directory");
+                        utils::run_msg_dlg("Warning!\nSelected directory doesn't appear to be\na valid DDLC directory");
                     }
                     if selected_dir.is_dir() && selected_dir.parent().is_some() {
                         extraction_dir = selected_dir;

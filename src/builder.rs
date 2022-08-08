@@ -557,7 +557,7 @@ fn __format_alert_msg(msg: &str) -> String {
     return rv;
 }
 
-fn _build_msg_box_ok_but(msg_box_win: &DoubleWindow) -> Button {
+fn _build_msg_box_ok_but(msg_box_win: &DoubleWindow, ypadding: i32) -> Button {
     let mut but = _build_button_base(
         BUT_WIDTH,
         BUT_HEIGHT,
@@ -568,7 +568,7 @@ fn _build_msg_box_ok_but(msg_box_win: &DoubleWindow) -> Button {
 
     but.set_pos(
         ALERT_WIN_WIDTH/2 - BUT_WIDTH/2,
-        ALERT_WIN_HEIGHT - BUT_HEIGHT - BUT_ALERT_WIN_PADDING
+        ALERT_WIN_HEIGHT - BUT_HEIGHT - ypadding
     );
     but.set_callback({
         let mut win = msg_box_win.clone();
@@ -606,7 +606,7 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
     txt.set_buffer(buf);
 
 
-    _build_msg_box_ok_but(&alert_win);
+    _build_msg_box_ok_but(&alert_win, BUT_ALERT_WIN_PADDING);
 
 
     alert_win.end();
@@ -620,26 +620,26 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
 pub fn build_msg_win(msg: &str) -> DoubleWindow {
     let (sw, sh) = screen_size();
 
-    let win_x = sw as i32/2 - ALERT_WIN_WIDTH/2;
-    let win_y = sh as i32/2 - ALERT_WIN_HEIGHT/2;
+    let win_x = sw as i32/2 - MSG_WIN_WIDTH/2;
+    let win_y = sh as i32/2 - MSG_WIN_HEIGHT/2;
 
     let mut alert_win = Window::default()
-        .with_size(ALERT_WIN_WIDTH, ALERT_WIN_HEIGHT)
+        .with_size(MSG_WIN_WIDTH, MSG_WIN_HEIGHT)
         .with_pos(win_x, win_y)
         .with_label(MSG_WIN_TITLE);
     alert_win.set_color(C_DDLC_WHITE_IDLE);
 
 
     let mut frame = Frame::default()
-        .with_size(ALERT_WIN_WIDTH, ALERT_WIN_HEIGHT - BUT_HEIGHT - 2*BUT_ALERT_WIN_PADDING)
+        .with_size(MSG_WIN_WIDTH, MSG_WIN_HEIGHT - BUT_HEIGHT - 2*BUT_MSG_WIN_PADDING)
         .with_pos(0, 0)
         .with_align(Align::Center | Align::Inside)
         .with_label(msg);
     frame.set_label_color(C_DDLC_PINK_DARK);
-    frame.set_label_size(18);
+    frame.set_label_size(MSG_FRAME_LABEL_SIZE);
 
 
-    _build_msg_box_ok_but(&alert_win);
+    _build_msg_box_ok_but(&alert_win, BUT_MSG_WIN_PADDING);
 
 
     alert_win.end();
