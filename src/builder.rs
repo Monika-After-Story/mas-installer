@@ -567,8 +567,8 @@ fn _build_msg_box_ok_but(msg_box_win: &DoubleWindow, ypadding: i32) -> Button {
     );
 
     but.set_pos(
-        ALERT_WIN_WIDTH/2 - BUT_WIDTH/2,
-        ALERT_WIN_HEIGHT - BUT_HEIGHT - ypadding
+        INNER_ALERT_WIN_WIDTH/2 - BUT_WIDTH/2,
+        INNER_ALERT_WIN_HEIGHT - BUT_HEIGHT - ypadding
     );
     but.set_callback({
         let mut win = msg_box_win.clone();
@@ -589,7 +589,12 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
         .with_size(ALERT_WIN_WIDTH, ALERT_WIN_HEIGHT)
         .with_pos(win_x, win_y)
         .with_label(ALERT_WIN_TITLE);
-    alert_win.set_color(C_DDLC_WHITE_IDLE);
+    alert_win.set_color(C_DDLC_PINK_IDLE);
+
+    let mut inner_win = Window::default()
+        .with_size(INNER_ALERT_WIN_WIDTH, INNER_ALERT_WIN_HEIGHT)
+        .with_pos(WIN_PADDING, WIN_PADDING);
+    inner_win.set_color(C_DDLC_WHITE_IDLE);
 
 
     let mut buf = TextBuffer::default();
@@ -599,8 +604,8 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
 
     let mut txt = TextDisplay::default()
         .with_size(
-            ALERT_WIN_WIDTH,
-            ALERT_WIN_HEIGHT - BUT_HEIGHT - 2*BUT_ALERT_WIN_PADDING
+            INNER_ALERT_WIN_WIDTH,
+            INNER_ALERT_WIN_HEIGHT - BUT_HEIGHT - 2*BUT_ALERT_WIN_PADDING
         )
         .with_pos(0, 0);
     txt.set_buffer(buf);
@@ -608,6 +613,8 @@ pub fn build_alert_win(msg: &str) -> DoubleWindow {
 
     _build_msg_box_ok_but(&alert_win, BUT_ALERT_WIN_PADDING);
 
+
+    inner_win.end();
 
     alert_win.end();
     alert_win.hide();
@@ -627,11 +634,16 @@ pub fn build_msg_win(msg: &str) -> DoubleWindow {
         .with_size(MSG_WIN_WIDTH, MSG_WIN_HEIGHT)
         .with_pos(win_x, win_y)
         .with_label(MSG_WIN_TITLE);
-    alert_win.set_color(C_DDLC_WHITE_IDLE);
+    alert_win.set_color(C_DDLC_PINK_IDLE);
+
+    let mut inner_win = Window::default()
+        .with_size(INNER_MSG_WIN_WIDTH, INNER_MSG_WIN_HEIGHT)
+        .with_pos(WIN_PADDING, WIN_PADDING);
+    inner_win.set_color(C_DDLC_WHITE_IDLE);
 
 
     let mut frame = Frame::default()
-        .with_size(MSG_WIN_WIDTH, MSG_WIN_HEIGHT - BUT_HEIGHT - 2*BUT_MSG_WIN_PADDING)
+        .with_size(INNER_MSG_WIN_WIDTH, INNER_MSG_WIN_HEIGHT - BUT_HEIGHT - 2*BUT_MSG_WIN_PADDING)
         .with_pos(0, 0)
         .with_align(Align::Center | Align::Inside)
         .with_label(msg);
@@ -641,6 +653,8 @@ pub fn build_msg_win(msg: &str) -> DoubleWindow {
 
     _build_msg_box_ok_but(&alert_win, BUT_MSG_WIN_PADDING);
 
+
+    inner_win.end();
 
     alert_win.end();
     alert_win.hide();
