@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Check cache
+      - name: Check windows build cache
         uses: actions/cache@v3
         with:
           path: |
@@ -31,24 +31,40 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-win-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Windows
         run: |
           rustup target add x86_64-pc-windows-gnu
           cargo build --verbose --target x86_64-pc-windows-gnu --release --no-default-features
 
+      - name: Upload win artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: mas-installer-release-win
+          path: |
+            target/release/mas-installer.exe
+          if-no-files-found: error
+
+      - name: Check linux build cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-build-lin-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Linux
         run: |
           cargo build --verbose --release --no-default-features
 
-      - name: Print content
-        run: ls -a
-
-      - name: Upload Artifacts
+      - name: Upload linux artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: mas-installer-release
+          name: mas-installer-release-linux
           path: |
-            target/release
+            target/release/mas-installer
           if-no-files-found: error
