@@ -5,6 +5,6 @@ fn main() {
     res.compile().unwrap();// I want it to panic if it fails
 }
 
-#[cfg(not(windows))]
+#[cfg(any(not(windows), not(feature="compile_icon")))]
 fn main() {
 }
