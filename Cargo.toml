@@ -30,3 +30,6 @@ default = ["compile_static"]
 compile_icon = []
 compile_license = []
 compile_static = ["compile_icon", "compile_license"]
+
+[profile.release]
+strip = true
