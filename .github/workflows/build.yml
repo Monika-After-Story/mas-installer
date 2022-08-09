@@ -7,22 +7,26 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check:
+  build:
     name: build
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install dependencies
+      - name: Install Linux Dependencies
+        if: runner.os == "Linux"
         run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-          sudo apt-get update && sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64
-          fi
+          sudo apt-get update
+          sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
 
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Check windows build cache
+      - name: Check Build Cache
         uses: actions/cache@v3
         with:
           path: |
@@ -31,40 +35,24 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-build-win-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Windows
-        run: |
-          rustup target add x86_64-pc-windows-gnu
-          cargo build --verbose --target x86_64-pc-windows-gnu --release --no-default-features
-
-      - name: Upload win artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: mas-installer-release-win
-          path: |
-            target/x86_64-pc-windows-gnu/release/mas-installer.exe
-          if-no-files-found: error
-
-      - name: Check linux build cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-build-lin-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Linux
+      - name: Cargo Build
         run: |
           cargo build --verbose --release --no-default-features
 
-      - name: Upload linux artifacts
+      - name: Upload Artifacts (non-windows)
+        if: runner.os != "Windows"
         uses: actions/upload-artifact@v3
         with:
-          name: mas-installer-release-linux
+          name: mas-installer-release-{{ matrix.os }}
           path: |
             target/release/mas-installer
-          if-no-files-found: error
+
+      - name: Upload Artifacts (windows)
+        if: runner.os == "Windows"
+        uses: actions/upload-artifact@v3
+        with:
+          name: mas-installer-release-{{ matrix.os }}
+          path: |
+            target/release/mas-installer.exe
