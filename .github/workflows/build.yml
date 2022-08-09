@@ -45,7 +45,7 @@ jobs:
         if: runner.os != 'Windows'
         uses: actions/upload-artifact@v3
         with:
-          name: mas-installer-release-{{ matrix.os }}
+          name: mas-installer-release-&{{ matrix.os }}
           path: |
             target/release/mas-installer
 
@@ -53,6 +53,6 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
         with:
-          name: mas-installer-release-{{ matrix.os }}
+          name: mas-installer-release-&{{ matrix.os }}
           path: |
             target/release/mas-installer.exe
