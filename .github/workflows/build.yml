@@ -43,7 +43,7 @@ jobs:
         with:
           name: mas-installer-release-win
           path: |
-            target/release/x86_64-pc-windows-gnu/mas-installer.exe
+            target/x86_64-pc-windows-gnu/release/mas-installer.exe
           if-no-files-found: error
 
       - name: Check linux build cache
