@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Install Linux Dependencies
-        if: runner.os == "Linux"
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
@@ -42,7 +42,7 @@ jobs:
           cargo build --verbose --release --no-default-features
 
       - name: Upload Artifacts (non-windows)
-        if: runner.os != "Windows"
+        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v3
         with:
           name: mas-installer-release-{{ matrix.os }}
@@ -50,7 +50,7 @@ jobs:
             target/release/mas-installer
 
       - name: Upload Artifacts (windows)
-        if: runner.os == "Windows"
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
         with:
           name: mas-installer-release-{{ matrix.os }}
