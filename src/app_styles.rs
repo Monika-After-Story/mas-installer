@@ -55,7 +55,7 @@ pub const BUT_BACK_LABEL: &str = "@< Back ";
 pub const BUT_CONTINUE_LABEL: &str = " Continue@>";
 pub const BUT_SELECT_DIR_LABEL: &str = " Select directory @fileopen";
 pub const BUT_USE_DLX_VERSION_LABEL: &str = "Deluxe version (pre-installed spritepacks)";
-pub const BUT_INSTALL_LABEL: &str = " Install";
+pub const BUT_INSTALL_LABEL: &str = "Install";
 pub const BUT_OK_LABEL: &str = "Ok";
 pub const BUT_EXIT_LABEL: &str = "Exit";
 
@@ -78,6 +78,13 @@ pub const MID_FRAME_HEIGHT: i32 = INNER_WIN_HEIGHT - MID_FRAME_YPOS - BUT_HEIGHT
 pub const MID_FRAME_LABEL_SIZE: i32 = TOP_FRAME_LABEL_SIZE;
 
 pub const MSG_FRAME_LABEL_SIZE: i32 = LABEL_SIZE_MED;
+
+
+// Text display constants
+pub const TXT_DISP_XPOS: i32 = MID_FRAME_XPOS;
+pub const TXT_DISP_YPOS: i32 = MID_FRAME_YPOS;
+pub const TXT_DISP_WIDTH: i32 = INNER_WIN_WIDTH;
+pub const TXT_DISP_HEIGHT: i32 = MID_FRAME_HEIGHT;
 
 
 // Text consts
@@ -110,6 +117,7 @@ pub const C_DDLC_PINK_ACT: Color = C_DDLC_PINK_IDLE;
 pub const C_BRIGHT_GREEN: Color = Color::from_hex(0x00ff00);
 
 
+// Raw text
 pub const WELCOME_TOP_FRAME_LABEL: &str = "Welcome to MAS installer";
 pub const WELCOME_MID_FRAME_LABEL: &str = concat!(
     "This program will install the latest version\n",
@@ -123,8 +131,7 @@ pub const PROGRESS_FRAME_LABEL: &str = "Installing. Please wait";
 pub const ABORT_TOP_FRAME_LABEL: &str = "Aborted";
 pub const ABORT_MID_FRAME_LABEL: &str = concat!(
     "Installation has been aborted.\n",
-    "Any already extracted files\n",
-    "will remain"
+    "Any already extracted files will remain"
 );
 pub const DONE_TOP_FRAME_LABEL: &str = "Finished";
 pub const DONE_MID_FRAME_LABEL: &str = concat!(

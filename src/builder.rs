@@ -430,8 +430,8 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     buf.set_text(APP_LICENSE);
 
     let mut txt = TextDisplay::default()
-        .with_size(INNER_WIN_WIDTH, 310)
-        .with_pos(0, 100);
+        .with_size(TXT_DISP_WIDTH, TXT_DISP_HEIGHT)
+        .with_pos(TXT_DISP_XPOS, TXT_DISP_YPOS);
     txt.wrap_mode(WrapMode::AtPixel, INNER_WIN_WIDTH-30);
     txt.set_buffer(buf);
 
