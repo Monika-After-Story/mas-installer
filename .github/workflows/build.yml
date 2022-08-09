@@ -42,10 +42,13 @@ jobs:
         run: |
           cargo build --verbose --release --no-default-features
 
+      - name: Print content
+        run: ls -a
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: mas-installer-release
           path: |
-            target/release/mas-installer
-            target/release/mas-installer.exe
+            target/release
+          if-no-files-found: error
