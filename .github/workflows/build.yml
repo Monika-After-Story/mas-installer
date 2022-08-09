@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install dependencies
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update && sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Linux
+        run: |
+          cargo build --release --no-default-features
+
+      - name: Windows
+        run: |
+          rustup target add x86_64-pc-windows-gnu
+          cargo build --target add x86_64-pc-windows-gnu --release --no-default-features
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: mas-installer-release
+          path: |
+            target/release/mas-installer
+            target/release/mas-installer.exe
