@@ -271,27 +271,33 @@ fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Mess
 // }
 
 
-/// Builds a frame at the given position
-fn _build_frame(xpos: i32, ypos: i32) -> Frame {
-    let frame = Frame::default()
-        .with_size(INNER_WIN_WIDTH-xpos, INNER_WIN_HEIGHT-ypos)
-        .with_pos(xpos, ypos);
-        // .with_align(Align::Top | Align::Inside)
-        // .with_label(label);
+/// Builds a frame at the top with the given label
+fn _build_top_frame(label: &str) -> Frame {
+    let mut frame = Frame::default()
+        .with_size(TOP_FRAME_WIDTH, TOP_FRAME_HEIGHT)
+        .with_pos(TOP_FRAME_XPOS, TOP_FRAME_YPOS);
+    // frame.set_frame(FrameType::FlatBox);
+    // frame.set_color(C_BLACK);
+    frame.set_align(Align::Center | Align::Inside);
+    frame.set_label(label);
+    frame.set_label_color(C_DDLC_PINK_DARK);
+    frame.set_label_size(TOP_FRAME_LABEL_SIZE);
 
     return frame;
 }
 
-/// Builds a frame at the top with the given label
-fn _build_top_frame(label: &str) -> Frame {
-    let mut frame = _build_frame(TOP_FRAME_XPOS, TOP_FRAME_YPOS);
+
+/// Builds a frame in the middle of the screen
+fn _build_mid_frame(label: &str) -> Frame {
+    let mut frame = Frame::default()
+        .with_size(MID_FRAME_WIDTH, MID_FRAME_HEIGHT)
+        .with_pos(MID_FRAME_XPOS, MID_FRAME_YPOS);
     // frame.set_frame(FrameType::FlatBox);
     // frame.set_color(C_BLACK);
-    frame.set_align(Align::Top | Align::Inside);
+    frame.set_align(Align::Center | Align::Inside);
     frame.set_label(label);
     frame.set_label_color(C_DDLC_PINK_DARK);
-    // frame.set_label_type(LabelType::Normal);
-    frame.set_label_size(TOP_FRAME_LABEL_SIZE);
+    frame.set_label_size(MID_FRAME_LABEL_SIZE);
 
     return frame;
 }
@@ -320,7 +326,8 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
     welcome_win.show();
     welcome_win.begin();
 
-    _build_top_frame(WELCOME_FRAME_LABEL);
+    _build_top_frame(WELCOME_TOP_FRAME_LABEL);
+    _build_mid_frame(WELCOME_MID_FRAME_LABEL);
 
     let welcome_but_pack = _build_welcome_win_pack();
     welcome_but_pack.begin();
@@ -425,6 +432,7 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     let mut txt = TextDisplay::default()
         .with_size(INNER_WIN_WIDTH, 310)
         .with_pos(0, 100);
+    txt.wrap_mode(WrapMode::AtPixel, INNER_WIN_WIDTH-30);
     txt.set_buffer(buf);
 
     _build_abort_back_contn_pack(sender);
@@ -676,7 +684,8 @@ pub fn build_abort_win(sender: Sender<Message>) -> DoubleWindow {
     let abort_win = build_inner_win();
     abort_win.begin();
 
-    _build_top_frame(ABORT_FRAME_LABEL);
+    _build_top_frame(ABORT_TOP_FRAME_LABEL);
+    _build_mid_frame(ABORT_MID_FRAME_LABEL);
 
     _build_exit_button(sender);
 
@@ -690,7 +699,8 @@ pub fn build_done_win(sender: Sender<Message>) -> DoubleWindow {
     let done_win = build_inner_win();
     done_win.begin();
 
-    _build_top_frame(DONE_FRAME_LABEL);
+    _build_top_frame(DONE_TOP_FRAME_LABEL);
+    _build_mid_frame(DONE_MID_FRAME_LABEL);
 
     _build_exit_button(sender);
 

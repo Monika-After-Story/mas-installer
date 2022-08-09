@@ -35,6 +35,8 @@ pub const MSG_WIN_HEIGHT: i32 = ALERT_WIN_HEIGHT;
 pub const INNER_MSG_WIN_WIDTH: i32 = MSG_WIN_WIDTH - 2*WIN_PADDING;
 pub const INNER_MSG_WIN_HEIGHT: i32 = MSG_WIN_HEIGHT - 2*WIN_PADDING;
 
+pub const INNER_WIN_CONTENT_YPADDING: i32 = 25;
+
 
 // Buttons consts
 pub const BUT_WIDTH: i32 = 130;
@@ -59,15 +61,23 @@ pub const BUT_EXIT_LABEL: &str = "Exit";
 
 pub const BUT_ALERT_WIN_PADDING: i32 = 10;
 pub const BUT_MSG_WIN_PADDING: i32 = BUT_ALERT_WIN_PADDING;
-pub const BUT_PACK_YPADDING: i32 = 25;
+pub const BUT_PACK_YPADDING: i32 = INNER_WIN_CONTENT_YPADDING;
 
 
 // Frame consts
-pub const TOP_FRAME_LABEL_SIZE: i32 = 28;
+pub const TOP_FRAME_LABEL_SIZE: i32 = LABEL_SIZE_LARGE;
 pub const TOP_FRAME_XPOS: i32 = 0;
-pub const TOP_FRAME_YPOS: i32 = 15;
+pub const TOP_FRAME_YPOS: i32 = INNER_WIN_CONTENT_YPADDING;
+pub const TOP_FRAME_WIDTH: i32 = INNER_WIN_WIDTH;
+pub const TOP_FRAME_HEIGHT: i32 = 35;
 
-pub const MSG_FRAME_LABEL_SIZE: i32 = 20;
+pub const MID_FRAME_XPOS: i32 = TOP_FRAME_XPOS;
+pub const MID_FRAME_YPOS: i32 = 2*TOP_FRAME_YPOS + TOP_FRAME_HEIGHT;
+pub const MID_FRAME_WIDTH: i32 = TOP_FRAME_WIDTH;
+pub const MID_FRAME_HEIGHT: i32 = INNER_WIN_HEIGHT - MID_FRAME_YPOS - BUT_HEIGHT - 2*INNER_WIN_CONTENT_YPADDING;
+pub const MID_FRAME_LABEL_SIZE: i32 = TOP_FRAME_LABEL_SIZE;
+
+pub const MSG_FRAME_LABEL_SIZE: i32 = LABEL_SIZE_MED;
 
 
 // Text consts
@@ -75,6 +85,9 @@ pub const SEL_DIR_TXT_HEIGHT: i32 = BUT_SEL_DIR_HEIGHT;
 pub const SEL_DIR_TXT_SIZE: i32 = 18;
 
 pub const SEL_DIR_DLG_PROMPT: &str = "Select Doki Doki Literature Club directory";
+
+pub const LABEL_SIZE_LARGE: i32 = 28;
+pub const LABEL_SIZE_MED: i32 = 20;
 
 
 // Progress bar consts
@@ -97,14 +110,24 @@ pub const C_DDLC_PINK_ACT: Color = C_DDLC_PINK_IDLE;
 pub const C_BRIGHT_GREEN: Color = Color::from_hex(0x00ff00);
 
 
-pub const WELCOME_FRAME_LABEL: &str = concat!(
-    "Welcome to MAS installer\n\n\n\n\n",
-    "This program will install the Monika After Story\n",
-    "mod on your computer"
+pub const WELCOME_TOP_FRAME_LABEL: &str = "Welcome to MAS installer";
+pub const WELCOME_MID_FRAME_LABEL: &str = concat!(
+    "This program will install the latest version\n",
+    "of the Monika After Story mod\n",
+    "on your computer"
 );
 pub const LICENSE_FRAME_LABEL: &str = "By continuing you agree with our license";
 pub const SELECT_DIR_FRAME_LABEL: &str = "Select Doki Doki Literature Club directory";
 pub const OPTIONS_FRAME_LABEL: &str = "Select additional settings";
-pub const PROGRESS_FRAME_LABEL: &str = "Installing, please wait";
-pub const ABORT_FRAME_LABEL: &str = "Installation aborted";
-pub const DONE_FRAME_LABEL: &str = "Monika After Story is now installed\non your computer";
+pub const PROGRESS_FRAME_LABEL: &str = "Installing. Please wait";
+pub const ABORT_TOP_FRAME_LABEL: &str = "Aborted";
+pub const ABORT_MID_FRAME_LABEL: &str = concat!(
+    "Installation has been aborted.\n",
+    "Any already extracted files\n",
+    "will remain"
+);
+pub const DONE_TOP_FRAME_LABEL: &str = "Finished";
+pub const DONE_MID_FRAME_LABEL: &str = concat!(
+    "Monika After Story has been successfully\n",
+    "installed on your computer"
+);
