@@ -18,21 +18,14 @@ use fltk::{
     app::{
         channel,
         Sender,
-        Receiver,
-        // Scheme
+        Receiver
     },
-    // enums::{
-    //     LabelType
-    // },
     text::TextBuffer,
     prelude::{
         WidgetExt,
         GroupExt,
     },
-    window::{
-        // Window,
-        DoubleWindow
-    }
+    window::DoubleWindow
 };
 
 use errors::InstallerError;
