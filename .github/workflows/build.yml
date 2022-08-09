@@ -26,6 +26,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Include License (non-windows)
+        if: runner.os != 'Windows'
+        runs: curl https://raw.githubusercontent.com/Monika-After-Story/MonikaModDev/master/LICENSE.md > src/static/license.md
+
+      - name: Include License (windows)
+        if: runner.os == 'Windows'
+        runs: Invoke-WebRequest https://raw.githubusercontent.com/Monika-After-Story/MonikaModDev/master/LICENSE.md -O src/static/license.md
+
       - name: Check Build Cache
         uses: actions/cache@v3
         with:
@@ -39,7 +47,7 @@ jobs:
 
       - name: Cargo Build
         run: |
-          cargo build --verbose --release --no-default-features
+          cargo build --verbose --release
 
       - name: Upload Artifacts (non-windows)
         if: runner.os != 'Windows'
