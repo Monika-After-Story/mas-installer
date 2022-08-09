@@ -40,7 +40,7 @@ jobs:
       - name: Windows
         run: |
           rustup target add "x86_64-pc-windows-gnu"
-          cargo build --verbose --target add "x86_64-pc-windows-gnu" --release --no-default-features
+          cargo build --verbose --target "x86_64-pc-windows-gnu" --release --no-default-features
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
