@@ -28,11 +28,11 @@ jobs:
 
       - name: Include License (non-windows)
         if: runner.os != 'Windows'
-        runs: curl https://raw.githubusercontent.com/Monika-After-Story/MonikaModDev/master/LICENSE.md > src/static/license.md
+        run: curl https://raw.githubusercontent.com/Monika-After-Story/MonikaModDev/master/LICENSE.md > src/static/license.md
 
       - name: Include License (windows)
         if: runner.os == 'Windows'
-        runs: Invoke-WebRequest https://raw.githubusercontent.com/Monika-After-Story/MonikaModDev/master/LICENSE.md -O src/static/license.md
+        run: Invoke-WebRequest https://raw.githubusercontent.com/Monika-After-Story/MonikaModDev/master/LICENSE.md -O src/static/license.md
 
       - name: Check Build Cache
         uses: actions/cache@v3
