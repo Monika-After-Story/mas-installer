@@ -60,7 +60,7 @@ pub fn build_app() -> App {
 pub fn build_outer_win() -> DoubleWindow {
     let mut main_win = Window::default()
         .with_size(WIN_WIDTH, WIN_HEIGHT)
-        .with_label(WIN_TITLE)
+        .with_label(&format!("{} - {}", WIN_TITLE, crate::VERSION.unwrap_or(crate::DEF_VERSION)))
         .center_screen();
     main_win.set_color(C_DDLC_PINK_IDLE);
 
