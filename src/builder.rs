@@ -432,7 +432,8 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     let mut txt = TextDisplay::default()
         .with_size(TXT_DISP_WIDTH, TXT_DISP_HEIGHT)
         .with_pos(TXT_DISP_XPOS, TXT_DISP_YPOS);
-    txt.wrap_mode(WrapMode::AtPixel, INNER_WIN_WIDTH-30);
+    txt.wrap_mode(WrapMode::AtBounds, 0);
+    txt.set_selection_color(C_DDLC_PINK_DARK);
     txt.set_buffer(buf);
 
     _build_abort_back_contn_pack(sender);
@@ -463,6 +464,7 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
         .with_size(INNER_WIN_WIDTH-BUT_SEL_DIR_WIDTH, SEL_DIR_TXT_HEIGHT);
     txt.set_text_size(SEL_DIR_TXT_SIZE);
     txt.wrap_mode(WrapMode::None, 0);
+    txt.set_selection_color(C_DDLC_PINK_DARK);
     txt.set_buffer(txt_buf);
 
     build_sel_dir_button(BUT_SELECT_DIR_LABEL, sender, Message::SelectDir);

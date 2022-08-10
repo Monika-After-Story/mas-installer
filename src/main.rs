@@ -40,7 +40,7 @@ static APP_ICON_DATA: &'static [u8] = b"";
 #[cfg(feature="compile_license")]
 static APP_LICENSE: &'static str = include_str!("static/license.md");
 #[cfg(not(feature="compile_license"))]
-static APP_LICENSE: &'static str = "Hello, World!";
+static APP_LICENSE: &'static str = "";
 // GH link parts to accept the API
 const ORG_NAME: &str = "Monika-After-Story";
 const REPO_NAME: &str = "MonikaModDev";
