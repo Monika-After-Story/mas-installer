@@ -1,4 +1,6 @@
-[![CI](https://github.com/Monika-After-Story/mas-installer/actions/workflows/ci.yml/badge.svg)](https://github.com/Monika-After-Story/mas-installer/actions/workflows/ci.yml) [![Build](https://github.com/Monika-After-Story/mas-installer/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/Monika-After-Story/mas-installer/actions/workflows/build.yml)
+[![CI](https://github.com/Monika-After-Story/mas-installer/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Monika-After-Story/mas-installer/actions/workflows/ci.yml) [![Build](https://github.com/Monika-After-Story/mas-installer/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/Monika-After-Story/mas-installer/actions/workflows/build.yml)
+
+[![CI](https://github.com/Monika-After-Story/mas-installer/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/Monika-After-Story/mas-installer/actions/workflows/ci.yml)
 
 ### Description
 Cross-platform installer for [Monika After Story](https://github.com/Monika-After-Story/MonikaModDev)
