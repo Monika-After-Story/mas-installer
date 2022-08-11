@@ -13,3 +13,7 @@ pub static APP_LICENSE: &'static str = "";
 // Images
 pub static VERTICAL_BAR_DATA: &'static [u8] = include_bytes!("static/vertical_bar.png");
 pub static VERTICAL_THUMB_DATA: &'static [u8] = include_bytes!("static/vertical_thumb.png");
+
+// Sounds
+// Credits: Ludum Dare 28 - Track 1 by @ben_burnes http://abstractionmusic.bandcamp.com/
+pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/ludum_dare_28_track_1.ogg");
