@@ -266,6 +266,39 @@ fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Mess
 // }
 
 
+fn draw_volume_button(b: &mut Button) {
+    let (b_x, b_y, b_w, b_h) = (b.x(), b.y(), b.w(), b.h());
+
+    let (frame_color, bg_color) = match b.has_visible_focus() {
+        true => (C_DDLC_PINK_ACT, C_DDLC_WHITE_ACT),
+        false => (C_DDLC_PINK_IDLE, C_DDLC_WHITE_IDLE)
+    };
+
+    draw::draw_rect_fill(b_x, b_y, b_w, b_h, frame_color);
+    draw::draw_rect_fill(b_x+BUT_PADDING, b_y+BUT_PADDING, b_w-BUT_PADDING*2, b_h-BUT_PADDING*2, bg_color);
+    if b.has_visible_focus() {
+        VOLUME_BUT_HOVER_IMG.lock().unwrap().draw(b_x+BUT_PADDING, b_y+BUT_PADDING, b_w-BUT_PADDING*2, b_h-BUT_PADDING*2);
+    }
+    else {
+        VOLUME_BUT_IMG.lock().unwrap().draw(b_x+BUT_PADDING, b_y+BUT_PADDING, b_w-BUT_PADDING*2, b_h-BUT_PADDING*2);
+    }
+    b.redraw();
+}
+
+/// Builds a button to control volume
+pub fn build_volume_but(sender: Sender<Message>) -> Button {
+    let mut but = _build_button_base(
+        BUT_MUTE_WIDTH,
+        BUT_MUTE_HEIGHT,
+        "",
+        _handle_button,
+        draw_volume_button
+    );
+    but.emit(sender, Message::VolumeCheck);
+    return but;
+}
+
+
 /// Builds a frame at the top with the given label
 fn _build_top_frame(label: &str) -> Frame {
     let mut frame = Frame::default()
@@ -298,19 +331,53 @@ fn _build_mid_frame(label: &str) -> Frame {
 }
 
 
-fn _build_welcome_win_pack() -> Pack {
-    const TOTAL_ITEMS: i32 = 2;
+fn _build_welcome_win_inner_pack() -> Pack {
+    let mut inner_pack = Pack::default()
+        .with_size(BUT_WIDTH + BUT_SPACING + BUT_MUTE_WIDTH, BUT_HEIGHT)
+        .with_align(Align::Center)
+        .with_type(PackType::Horizontal);
+    inner_pack.set_spacing(BUT_SPACING);
+
+    inner_pack.end();
+
+    return inner_pack;
+}
+
+fn _build_welcome_win_outer_pack() -> Pack {
+    const WIDTH: i32 = INNER_WIN_WIDTH-INNER_WIN_CONTENT_XPADDING*2;
 
     let mut pack = Pack::default()
-        .with_size(INNER_WIN_WIDTH-INNER_WIN_CONTENT_XPADDING*2, BUT_HEIGHT)
+        .with_size(WIDTH, BUT_HEIGHT)
         .with_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH*TOTAL_ITEMS - INNER_WIN_CONTENT_XPADDING*2);
+    pack.set_spacing(
+        WIDTH - (BUT_WIDTH + BUT_SPACING + BUT_MUTE_WIDTH) - BUT_WIDTH
+    );
 
     pack.end();
 
     return pack;
+}
+
+/// Builds a pack of buttons for the welcome window
+fn _build_welcome_win_pack(sender: Sender<Message>) -> Pack {
+    let outer_pack = _build_welcome_win_outer_pack();
+    outer_pack.begin();
+
+    let inner_pack = _build_welcome_win_inner_pack();
+    inner_pack.begin();
+
+    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
+    build_volume_but(sender);
+
+    inner_pack.end();
+
+    build_button(BUT_CONTINUE_LABEL, sender, Message::NextPage);
+
+    outer_pack.end();
+
+    return outer_pack;
 }
 
 /// Builds the welcome windows
@@ -322,13 +389,7 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
     _build_top_frame(WELCOME_TOP_FRAME_LABEL);
     _build_mid_frame(WELCOME_MID_FRAME_LABEL);
 
-    let welcome_but_pack = _build_welcome_win_pack();
-    welcome_but_pack.begin();
-
-    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
-    build_button(BUT_CONTINUE_LABEL, sender, Message::NextPage);
-
-    welcome_but_pack.end();
+    _build_welcome_win_pack(sender);
 
     welcome_win.end();
 
@@ -336,73 +397,80 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
 }
 
 
-fn _build_ternary_inner_pack() -> Pack {
-    const TOTAL_ITEMS: i32 = 2;
-
-    let mut inner_pack = Pack::default()
-        .with_size(BUT_WIDTH*TOTAL_ITEMS + 5, BUT_HEIGHT)
-        .with_align(Align::Center)
-        .with_type(PackType::Horizontal);
-    inner_pack.set_spacing(5);
-
-    inner_pack.end();
-
-    return inner_pack;
-}
-
-fn _build_ternary_outer_pack(spacing: i32) -> Pack {
-    let mut pack = Pack::default()
+fn _build_4but_outer_pack() -> Pack {
+    let pack = Pack::default()
         .with_size(INNER_WIN_WIDTH-INNER_WIN_CONTENT_XPADDING*2, BUT_HEIGHT)
         .with_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH - spacing - INNER_WIN_CONTENT_XPADDING*2);
 
     pack.end();
 
     return pack;
 }
 
-/// Builds a pack of 3 buttons
-fn _build_ternary_but_pack(
-    sender: Sender<Message>,
-    but0_data: (&str, Message),
-    but1_data: (&str, Message),
-    but2_data: (&str, Message)
-) {
-    let inner_pack = _build_ternary_inner_pack();
-
-    inner_pack.begin();
-    build_button(but1_data.0, sender, but1_data.1);
-    build_button(but2_data.0, sender, but2_data.1);
-    inner_pack.end();
-
-    let mut outer_pack = _build_ternary_outer_pack(inner_pack.w());
-
-    outer_pack.begin();
-    build_button(but0_data.0, sender, but0_data.1);
-    outer_pack.add(&inner_pack);
-    outer_pack.end();
+fn _build_4but_left_inner_pack() -> Pack {
+    return _build_welcome_win_inner_pack();
 }
 
-/// Builds a pack of 3 buttons
-/// Example: <Abort>      <Back> <Continue>
+fn _build_4but_right_inner_pack() -> Pack {
+    let mut inner_pack = Pack::default()
+        .with_size(2*BUT_WIDTH + BUT_SPACING, BUT_HEIGHT)
+        .with_align(Align::Center)
+        .with_type(PackType::Horizontal);
+    inner_pack.set_spacing(BUT_SPACING);
+
+    inner_pack.end();
+
+    return inner_pack;
+}
+
+/// Builds a pack of 4 buttons
+fn _build_4but_pack(
+    sender: Sender<Message>,
+    but3_data: (&str, Message)
+) -> Pack {
+    let mut outer_pack = _build_4but_outer_pack();
+    outer_pack.begin();
+
+    let left_inner_pack = _build_4but_left_inner_pack();
+    left_inner_pack.begin();
+
+    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
+    build_volume_but(sender);
+
+    left_inner_pack.end();
+
+    let right_inner_pack = _build_4but_right_inner_pack();
+    right_inner_pack.begin();
+
+    build_button(BUT_BACK_LABEL, sender, Message::PrevPage);
+    build_button(but3_data.0, sender, but3_data.1);
+
+    right_inner_pack.end();
+
+    outer_pack.set_spacing(
+        outer_pack.width() - left_inner_pack.width() - right_inner_pack.width()
+    );
+    outer_pack.end();
+
+    return outer_pack;
+}
+
+/// Builds a pack of 4 buttons
+/// Example: <Abort> <Volume>      <Back> <Continue>
 fn _build_abort_back_contn_pack(sender: Sender<Message>) {
-    _build_ternary_but_pack(
+    _build_4but_pack(
         sender,
-        (BUT_ABORT_LABEL, Message::Abort),
-        (BUT_BACK_LABEL, Message::PrevPage),
         (BUT_CONTINUE_LABEL, Message::NextPage)
     );
 }
 
-/// Builds a pack of 3 buttons
-/// Example: <Abort>      <Back> <Install>
+/// Builds a pack of 4 buttons
+/// Example: <Abort> <Volume>      <Back> <Install>
 fn _build_abort_back_inst_pack(sender: Sender<Message>) {
-    _build_ternary_but_pack(
+    _build_4but_pack(
         sender,
-        (BUT_ABORT_LABEL, Message::Abort),
-        (BUT_BACK_LABEL, Message::PrevPage),
         (BUT_INSTALL_LABEL, Message::Install)
     );
 }

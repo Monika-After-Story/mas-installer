@@ -1,8 +1,11 @@
+use std::sync::Mutex;
+
 use fltk::{
     enums::{
         Color,
         Font
-    }
+    },
+    image::PngImage
 };
 
 
@@ -43,7 +46,11 @@ pub const INNER_WIN_CONTENT_YPADDING: i32 = INNER_WIN_CONTENT_XPADDING;
 pub const BUT_WIDTH: i32 = 130;
 pub const BUT_HEIGHT: i32 = 35;
 
+pub const BUT_MUTE_WIDTH: i32 = BUT_HEIGHT;
+pub const BUT_MUTE_HEIGHT: i32 = BUT_MUTE_WIDTH;
+
 pub const BUT_PADDING: i32 = 3;
+pub const BUT_SPACING: i32 = 5;
 
 pub const BUT_FONT_SIZE: i32 = 16;
 pub const BUT_FONT: Font = Font::HelveticaBold;
@@ -51,7 +58,7 @@ pub const BUT_FONT: Font = Font::HelveticaBold;
 pub const BUT_ABORT_LABEL: &str = "Abort";
 pub const BUT_BACK_LABEL: &str = "@< Back ";
 pub const BUT_CONTINUE_LABEL: &str = " Continue@>";
-pub const BUT_SELECT_DIR_LABEL: &str = " Browse @fileopen";
+pub const BUT_SELECT_DIR_LABEL: &str = "Browse @fileopen";
 pub const BUT_USE_DLX_VERSION_LABEL: &str = "Deluxe version (pre-installed spritepacks)";
 pub const BUT_INSTALL_LABEL: &str = "Install";
 pub const BUT_OK_LABEL: &str = "Ok";
@@ -150,3 +157,14 @@ pub const DONE_MID_FRAME_LABEL: &str = concat!(
     "Monika After Story has been successfully\n",
     "installed on your computer"
 );
+
+
+// Define images
+lazy_static::lazy_static! {
+    pub static ref VOLUME_BUT_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_DATA).unwrap()
+    );
+    pub static ref VOLUME_BUT_HOVER_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_HOVER_DATA).unwrap()
+    );
+}

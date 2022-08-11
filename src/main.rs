@@ -54,6 +54,7 @@ pub enum Message {
     PrevPage,
     SelectDir,
     DlxVersionCheck,
+    VolumeCheck,
     Install,
     Preparing,
     Downloading,
@@ -74,7 +75,7 @@ fn main() {
     let audio_manager = match audio::play_theme() {
         Ok(s) => Some(s),
         Err(e) => {
-            eprintln!("{e}");
+            eprintln!("Failed to init audio: {e}");
             None
         }
     };
@@ -150,6 +151,19 @@ fn main() {
                         false => println!("Using standard version...")
                     };
                 },
+                Message::VolumeCheck => {
+                    if let Some(ref am) = audio_manager {
+                        let sink = am.get_sink();
+                        if sink.volume() == 0.0{
+                            sink.set_volume(1.0);
+                            println!("Audio unmuted...")
+                        }
+                        else {
+                            sink.set_volume(0.0);
+                            println!("Audio muted...")
+                        }
+                    }
+                }
                 Message::Install => {
                     // We warn the user again if the extraction dir looks wrong
                     if !utils::is_valid_ddlc_dir(&extraction_dir) {
