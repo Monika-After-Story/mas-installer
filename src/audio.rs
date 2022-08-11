@@ -57,7 +57,7 @@ impl AudioManager {
     }
 
     /// Appends a new Source to play in this audio manager
-    pub fn append_source(&self, source: S, repeat: bool) {
+    pub fn append_source(&self, source: Sauce, repeat: bool) {
         if repeat {
             self.get_sink().append(source.repeat_infinite());
         }
@@ -80,12 +80,13 @@ impl AudioManager {
 
 
 type RawData = &'static[u8];
-type S = SamplesConverter<Decoder<Cursor<RawData>>, u16>;
+type SampleType = f32;
+type Sauce = SamplesConverter<Decoder<Cursor<RawData>>, SampleType>;
 
 
-fn get_source_from_raw(data: RawData) -> Result<S, AudioError> {
+fn get_source_from_raw(data: RawData) -> Result<Sauce, AudioError> {
     let buf = Cursor::new(data);
-    let decoder = Decoder::new(buf)?.convert_samples::<u16>();
+    let decoder = Decoder::new(buf)?.convert_samples::<SampleType>();
 
     return Ok(decoder);
 }
