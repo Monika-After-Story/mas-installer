@@ -5,6 +5,7 @@ mod builder;
 mod errors;
 mod utils;
 mod static_data;
+mod audio;
 
 
 use std::{
@@ -69,6 +70,14 @@ type InstallResult = Result<(), InstallerError>;
 /// The entry point
 fn main() {
     utils::disable_global_hotkeys();
+
+    let audio_manager = match audio::play_theme() {
+        Ok(s) => Some(s),
+        Err(e) => {
+            eprintln!("{e}");
+            None
+        }
+    };
 
     // Some things our program will use
     let (sender, receiver): (Sender<Message>, Receiver<Message>) = channel();
@@ -202,6 +211,9 @@ fn main() {
     }
     cleanup_th_handle(installer_th_handle);
     app.quit();
+    if audio_manager.is_some() {
+        audio_manager.unwrap().stop();
+    }
 }
 
 /// Joins the thread handle
