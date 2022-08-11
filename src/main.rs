@@ -6,6 +6,7 @@ mod errors;
 mod utils;
 mod static_data;
 mod audio;
+mod app;
 
 
 use std::{
