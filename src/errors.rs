@@ -9,6 +9,12 @@ use reqwest::{
     StatusCode
 };
 use serde_json::Error as SerdeError;
+use rodio::{
+    PlayError,
+    StreamError,
+    DevicesError,
+    decoder::DecoderError
+};
 
 
 /// Error type repesenting an error occured during downloading
@@ -192,6 +198,70 @@ impl fmt::Display for InstallerError {
             },
             Self::ExtractionError(err) => {
                 write!(f, "extraction failed: {}", err)
+            }
+        };
+    }
+}
+
+
+/// Error enum for audio related errors
+#[derive(Debug)]
+pub enum AudioError {
+    PlayError(PlayError),
+    StreamError(StreamError),
+    DevicesError(DevicesError),
+    DecoderError(DecoderError)
+}
+
+impl From<PlayError> for AudioError {
+    fn from(err: PlayError) -> Self {
+        return Self::PlayError(err);
+    }
+}
+
+impl From<StreamError> for AudioError {
+    fn from(err: StreamError) -> Self {
+        return Self::StreamError(err);
+    }
+}
+
+impl From<DevicesError> for AudioError {
+    fn from(err: DevicesError) -> Self {
+        return Self::DevicesError(err);
+    }
+}
+
+impl From<DecoderError> for AudioError {
+    fn from(err: DecoderError) -> Self {
+        return Self::DecoderError(err);
+    }
+}
+
+impl StdError for AudioError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        return match self {
+            Self::PlayError(og_err) => Some(og_err),
+            Self::StreamError(og_err) => Some(og_err),
+            Self::DevicesError(og_err) => Some(og_err),
+            Self::DecoderError(og_err) => Some(og_err)
+        };
+    }
+}
+
+impl fmt::Display for AudioError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return match self {
+            Self::PlayError(err) => {
+                write!(f, "{err}")
+            },
+            Self::StreamError(err) => {
+                write!(f, "{err}")
+            },
+            Self::DevicesError(err) => {
+                write!(f, "{err}")
+            },
+            Self::DecoderError(err) => {
+                write!(f, "{err}")
             }
         };
     }
