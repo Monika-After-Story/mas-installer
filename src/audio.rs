@@ -16,6 +16,12 @@ use crate::{
 };
 
 
+type Volume = f32;
+type RawData = &'static[u8];
+type SampleType = f32;
+type Sauce = SamplesConverter<Decoder<Cursor<RawData>>, SampleType>;
+
+
 /// An audio manager
 /// this only exist to keep references to all 3 main components in one place
 /// and drop them at the same time
@@ -76,12 +82,29 @@ impl AudioManager {
     pub fn stop(self) {
         drop(self);
     }
+
+    /// Pauses the audio
+    #[allow(dead_code)]
+    pub fn pause(&self) {
+        self.get_sink().pause();
+    }
+
+    /// Unpauses the audio
+    #[allow(dead_code)]
+    pub fn unpause(&self) {
+        self.get_sink().play();
+    }
+
+    /// Returns current volume
+    pub fn get_volume(&self) -> Volume {
+        return self.get_sink().volume()
+    }
+
+    /// Sets new volume
+    pub fn set_volume(&self, volume: Volume) {
+        self.get_sink().set_volume(volume);
+    }
 }
-
-
-type RawData = &'static[u8];
-type SampleType = f32;
-type Sauce = SamplesConverter<Decoder<Cursor<RawData>>, SampleType>;
 
 
 fn get_source_from_raw(data: RawData) -> Result<Sauce, AudioError> {

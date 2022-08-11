@@ -153,13 +153,12 @@ fn main() {
                 },
                 Message::VolumeCheck => {
                     if let Some(ref am) = audio_manager {
-                        let sink = am.get_sink();
-                        if sink.volume() == 0.0{
-                            sink.set_volume(1.0);
+                        if am.get_volume() == 0.0{
+                            am.set_volume(1.0);
                             println!("Audio unmuted...")
                         }
                         else {
-                            sink.set_volume(0.0);
+                            am.set_volume(0.0);
                             println!("Audio muted...")
                         }
                     }
