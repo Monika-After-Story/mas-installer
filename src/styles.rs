@@ -35,15 +35,13 @@ pub const MSG_WIN_HEIGHT: i32 = ALERT_WIN_HEIGHT;
 pub const INNER_MSG_WIN_WIDTH: i32 = MSG_WIN_WIDTH - 2*WIN_PADDING;
 pub const INNER_MSG_WIN_HEIGHT: i32 = MSG_WIN_HEIGHT - 2*WIN_PADDING;
 
-pub const INNER_WIN_CONTENT_YPADDING: i32 = 25;
+pub const INNER_WIN_CONTENT_XPADDING: i32 = 20;
+pub const INNER_WIN_CONTENT_YPADDING: i32 = INNER_WIN_CONTENT_XPADDING;
 
 
 // Buttons consts
 pub const BUT_WIDTH: i32 = 130;
 pub const BUT_HEIGHT: i32 = 35;
-
-pub const BUT_SEL_DIR_WIDTH: i32 = 160;
-pub const BUT_SEL_DIR_HEIGHT: i32 = 42;
 
 pub const BUT_PADDING: i32 = 3;
 
@@ -53,7 +51,7 @@ pub const BUT_FONT: Font = Font::HelveticaBold;
 pub const BUT_ABORT_LABEL: &str = "Abort";
 pub const BUT_BACK_LABEL: &str = "@< Back ";
 pub const BUT_CONTINUE_LABEL: &str = " Continue@>";
-pub const BUT_SELECT_DIR_LABEL: &str = " Select directory @fileopen";
+pub const BUT_SELECT_DIR_LABEL: &str = " Browse @fileopen";
 pub const BUT_USE_DLX_VERSION_LABEL: &str = "Deluxe version (pre-installed spritepacks)";
 pub const BUT_INSTALL_LABEL: &str = "Install";
 pub const BUT_OK_LABEL: &str = "Ok";
@@ -81,14 +79,17 @@ pub const MSG_FRAME_LABEL_SIZE: i32 = LABEL_SIZE_MED;
 
 
 // Text display constants
-pub const TXT_DISP_XPOS: i32 = LICENSE_SLIDER_WIDTH;
+pub const TXT_DISP_XPOS: i32 = INNER_WIN_CONTENT_XPADDING;
 pub const TXT_DISP_YPOS: i32 = MID_FRAME_YPOS;
-pub const TXT_DISP_WIDTH: i32 = INNER_WIN_WIDTH - 2*LICENSE_SLIDER_WIDTH;
+pub const TXT_DISP_WIDTH: i32 = INNER_WIN_WIDTH - 2*INNER_WIN_CONTENT_XPADDING;
 pub const TXT_DISP_HEIGHT: i32 = MID_FRAME_HEIGHT;
 
 
 // Text consts
-pub const SEL_DIR_TXT_HEIGHT: i32 = BUT_SEL_DIR_HEIGHT;
+pub const SEL_DIR_TXT_XPOS: i32 = INNER_WIN_CONTENT_XPADDING;
+pub const SEL_DIR_TXT_YPOS: i32 = INNER_WIN_HEIGHT/2 - SEL_DIR_TXT_HEIGHT;
+pub const SEL_DIR_TXT_WIDTH: i32 = INNER_WIN_WIDTH - 2*INNER_WIN_CONTENT_XPADDING;
+pub const SEL_DIR_TXT_HEIGHT: i32 = 28;
 pub const SEL_DIR_TXT_SIZE: i32 = 18;
 
 pub const SEL_DIR_DLG_PROMPT: &str = "Select Doki Doki Literature Club directory";
@@ -108,7 +109,7 @@ pub const SCROLL_AMOUNT: f64 = 3.0;
 // there doesn't appear to be a better way, this value works for us
 // so we hard-code it
 pub const LICENSE_SLIDER_LINES_IGNORE: i32 = 850;
-pub const LICENSE_SLIDER_WIDTH: i32 = 20;
+pub const LICENSE_SLIDER_WIDTH: i32 = INNER_WIN_CONTENT_XPADDING;
 pub const LICENSE_SLIDER_HEIGHT: i32 = TXT_DISP_HEIGHT;
 pub const LICENSE_SLIDER_SIZE: f32 = 0.2;
 

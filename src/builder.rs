@@ -191,17 +191,6 @@ pub fn build_button(label: &str, sender: Sender<Message>, msg: Message) -> Butto
     return but;
 }
 
-/// Builds a select directory dialogue button
-pub fn build_sel_dir_button(label: &str, sender: Sender<Message>, msg: Message) -> Button {
-    return _build_button_adv(
-        BUT_SEL_DIR_WIDTH,
-        BUT_SEL_DIR_HEIGHT,
-        label,
-        sender,
-        msg
-    );
-}
-
 
 /// Callback for handling buttons events.
 /// Allows to handle hover events
@@ -547,24 +536,17 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
 
     _build_top_frame(SELECT_DIR_FRAME_LABEL);
 
-    let mut pack = Pack::default()
-        .with_size(INNER_WIN_WIDTH, SEL_DIR_TXT_HEIGHT)
-        .with_align(Align::Center)
-        .with_type(PackType::Horizontal);
-    pack = pack.center_of_parent();
-    pack.begin();
-
     let mut txt = TextDisplay::default()
-        .with_size(INNER_WIN_WIDTH-BUT_SEL_DIR_WIDTH, SEL_DIR_TXT_HEIGHT);
+        .with_size(SEL_DIR_TXT_WIDTH, SEL_DIR_TXT_HEIGHT)
+        .with_pos(SEL_DIR_TXT_XPOS, SEL_DIR_TXT_YPOS);
     txt.set_text_size(SEL_DIR_TXT_SIZE);
     txt.wrap_mode(WrapMode::None, 0);
     txt.set_selection_color(C_DDLC_PINK_DARK);
     txt.set_scrollbar_size(-1);
     txt.set_buffer(txt_buf);
 
-    build_sel_dir_button(BUT_SELECT_DIR_LABEL, sender, Message::SelectDir);
-
-    pack.end();
+    let mut but = build_button(BUT_SELECT_DIR_LABEL, sender, Message::SelectDir);
+    but.set_pos(INNER_WIN_CONTENT_XPADDING+SEL_DIR_TXT_WIDTH-BUT_WIDTH, SEL_DIR_TXT_YPOS+SEL_DIR_TXT_HEIGHT);
 
     _build_abort_back_contn_pack(sender);
 
