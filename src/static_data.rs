@@ -1,14 +1,11 @@
 // Include the icon
-#[cfg(feature="compile_icon")]
 pub static APP_ICON_DATA: &'static [u8] = include_bytes!("static/icon.png");
-#[cfg(not(feature="compile_icon"))]
-pub static APP_ICON_DATA: &'static [u8] = b"";
 
 // Include license
-#[cfg(feature="compile_license")]
+#[cfg(feature="include_license")]
 pub static APP_LICENSE: &'static str = include_str!("static/license.md");
-#[cfg(not(feature="compile_license"))]
-pub static APP_LICENSE: &'static str = "";
+#[cfg(not(feature="include_license"))]
+pub static APP_LICENSE: &'static str = "You can find the license at https://github.com/Monika-After-Story/MonikaModDev/blob/master/LICENSE.md";
 
 // Images
 pub static VERTICAL_BAR_DATA: &'static [u8] = include_bytes!("static/vertical_bar.png");

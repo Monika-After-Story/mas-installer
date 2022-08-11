@@ -26,11 +26,9 @@ FileDescription = "Installer for Monika After Story"
 CompanyName = "Monika After Story Team"
 
 [features]
-default = ["compile_static"]
+default = ["include_license"]
 
-compile_icon = []
-compile_license = []
-compile_static = ["compile_icon", "compile_license"]
+include_license = []
 
 [profile.release]
 strip = true

@@ -420,7 +420,13 @@ fn build_license_txt_slider(mut txt_disp: TextDisplay, max_value: f64) -> Slider
         .right_of(&txt_disp, 0);
 
     slider.set_minimum(0.0);
-    slider.set_maximum(max_value);
+    if max_value < 1.0 {
+        slider.set_maximum(1.0);
+        slider.deactivate();
+    }
+    else {
+        slider.set_maximum(max_value);
+    }
     slider.set_step(1.0, 1);
     slider.set_slider_size(LICENSE_SLIDER_SIZE);
     slider.draw(
@@ -455,7 +461,7 @@ fn build_license_txt_slider(mut txt_disp: TextDisplay, max_value: f64) -> Slider
 }
 
 // Sets a hander for license text display
-fn set_license_txt_handler(txt_disp: &mut TextDisplay, slider: Slider, max_value: f64) {
+fn set_license_txt_handler(txt_disp: &mut TextDisplay, slider: Slider) {
     txt_disp.handle(
         {
             let mut slider = slider.clone();
@@ -466,7 +472,7 @@ fn set_license_txt_handler(txt_disp: &mut TextDisplay, slider: Slider, max_value
                     Event::MouseWheel => {
                         match event_dy() {
                             MouseWheel::Up => {
-                                current_value = f64::min(max_value, current_value+SCROLL_AMOUNT)
+                                current_value = f64::min(slider.maximum(), current_value+SCROLL_AMOUNT)
                             },
                             MouseWheel::Down => {
                                 current_value = f64::max(0.0, current_value-SCROLL_AMOUNT);
@@ -507,17 +513,20 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
 
     let mut buf = TextBuffer::default();
     buf.set_text(static_data::APP_LICENSE);
-    let total_chars = buf.length();
+    let mut total_chars = buf.length();
+    if total_chars > LICENSE_SLIDER_LINES_IGNORE {
+        total_chars -= LICENSE_SLIDER_LINES_IGNORE;
+    }
 
     let mut txt_disp = build_license_txt(buf);
 
     let total_lines = txt_disp.count_lines(
-        0, total_chars-LICENSE_SLIDER_LINES_IGNORE, true
+        0, total_chars, true
     ) as f64;
 
     let slider = build_license_txt_slider(txt_disp.clone(), total_lines);
 
-    set_license_txt_handler(&mut txt_disp, slider.clone(), total_lines);
+    set_license_txt_handler(&mut txt_disp, slider.clone());
 
     _build_abort_back_contn_pack(sender);
 
