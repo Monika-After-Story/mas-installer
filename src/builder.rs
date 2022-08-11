@@ -300,15 +300,13 @@ fn _build_mid_frame(label: &str) -> Frame {
 
 fn _build_welcome_win_pack() -> Pack {
     const TOTAL_ITEMS: i32 = 2;
-    const PAD_X: i32 = 50;
-    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
 
     let mut pack = Pack::default()
-        .with_size(INNER_WIN_WIDTH-PAD_X*2, BUT_HEIGHT)
-        .with_pos(PAD_X, PAD_Y)
+        .with_size(INNER_WIN_WIDTH-INNER_WIN_CONTENT_XPADDING*2, BUT_HEIGHT)
+        .with_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH*TOTAL_ITEMS - PAD_X*2);
+    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH*TOTAL_ITEMS - INNER_WIN_CONTENT_XPADDING*2);
 
     pack.end();
 
@@ -353,15 +351,12 @@ fn _build_ternary_inner_pack() -> Pack {
 }
 
 fn _build_ternary_outer_pack(spacing: i32) -> Pack {
-    const PAD_X: i32 = 50;
-    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
-
     let mut pack = Pack::default()
-        .with_size(INNER_WIN_WIDTH-PAD_X*2, BUT_HEIGHT)
-        .with_pos(PAD_X, PAD_Y)
+        .with_size(INNER_WIN_WIDTH-INNER_WIN_CONTENT_XPADDING*2, BUT_HEIGHT)
+        .with_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH - spacing - PAD_X*2);
+    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH - spacing - INNER_WIN_CONTENT_XPADDING*2);
 
     pack.end();
 
@@ -622,10 +617,8 @@ pub fn build_propgress_win(sender: Sender<Message>, bar: &Progress) -> DoubleWin
 
     _build_top_frame(PROGRESS_FRAME_LABEL);
 
-    const PAD_X: i32 = 50;
-    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
     let mut abrt_but = build_button(BUT_ABORT_LABEL, sender, Message::Abort);
-    abrt_but.set_pos(PAD_X, PAD_Y);
+    abrt_but.set_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
 
     progress_win.add(bar);
 
@@ -762,7 +755,7 @@ pub fn build_msg_win(msg: &str) -> DoubleWindow {
 
 fn _build_exit_button(sender: Sender<Message>) -> Button {
     let mut but = build_button(BUT_EXIT_LABEL, sender, Message::Close);
-    but.set_pos(INNER_WIN_WIDTH-BUT_WIDTH-50, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
+    but.set_pos(INNER_WIN_WIDTH-BUT_WIDTH-INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
 
     return but;
 }
