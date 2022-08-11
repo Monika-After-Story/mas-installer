@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 // #![allow(dead_code, unused_imports, unused_mut, unused_variables)]// TODO: remove me
-mod app_styles;
+mod styles;
 mod builder;
 mod errors;
 mod utils;
@@ -125,7 +125,7 @@ fn main() {
                     utils::show_previous_win(&mut windows, &mut current_win_id);
                 },
                 Message::SelectDir => {
-                    let selected_dir = utils::run_select_dir_dlg(app_styles::SEL_DIR_DLG_PROMPT);
+                    let selected_dir = utils::run_select_dir_dlg(styles::SEL_DIR_DLG_PROMPT);
                     if !utils::is_valid_ddlc_dir(&selected_dir) {
                         utils::run_msg_dlg("Warning!\nSelected directory doesn't appear to be\na valid DDLC directory");
                     }

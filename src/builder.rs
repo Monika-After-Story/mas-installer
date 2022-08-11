@@ -47,7 +47,7 @@ use fltk::{
 };
 
 use crate::{
-    app_styles::*,
+    styles::*,
     // utils::*,
     Message,
     static_data
