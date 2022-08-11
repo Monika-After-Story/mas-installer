@@ -106,7 +106,7 @@ pub const LABEL_SIZE_MED: i32 = 20;
 
 
 // Progress bar consts
-pub const PB_WIDTH: i32 = WIN_WIDTH-2*WIN_PADDING;
+pub const PB_WIDTH: i32 = INNER_WIN_WIDTH - 2*INNER_WIN_CONTENT_XPADDING;
 pub const PB_HEIGHT: i32 = BUT_HEIGHT;
 
 

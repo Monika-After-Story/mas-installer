@@ -70,6 +70,7 @@ type InstallResult = Result<(), InstallerError>;
 
 /// The entry point
 fn main() {
+    // This needs to be done asap
     utils::disable_global_hotkeys();
 
     let audio_manager = match audio::play_theme() {
@@ -92,8 +93,7 @@ fn main() {
 
     let app = builder::build_app();
 
-    let mut main_win = builder::build_outer_win();
-    utils::load_icon(&mut main_win);
+    let mut main_win = builder::build_outer_win(sender, &abort_flag);
     main_win.begin();
 
 
@@ -137,7 +137,7 @@ fn main() {
                 Message::SelectDir => {
                     let selected_dir = utils::run_select_dir_dlg(styles::SEL_DIR_DLG_PROMPT);
                     if !utils::is_valid_ddlc_dir(&selected_dir) {
-                        utils::run_msg_dlg("Warning!\nSelected directory doesn't appear to be\na valid DDLC directory");
+                        utils::run_msg_dlg("Attention!\nSelected directory doesn't appear to be\na valid DDLC directory");
                     }
                     if selected_dir.is_dir() && selected_dir.parent().is_some() {
                         extraction_dir = selected_dir;
@@ -167,7 +167,7 @@ fn main() {
                 Message::Install => {
                     // We warn the user again if the extraction dir looks wrong
                     if !utils::is_valid_ddlc_dir(&extraction_dir) {
-                        utils::run_msg_dlg("Warning!\nSelected directory doesn't appear to be\na valid DDLC directory");
+                        utils::run_msg_dlg("Attention!\nInstalling into a non-DDLC directory");
                     }
                     // We also need to move to the next window
                     sender.send(Message::NextPage);
@@ -216,7 +216,7 @@ fn main() {
                     abort_win.show();
                 },
                 Message::Done => {
-                    println!("Installation is complete!");
+                    println!("Done!\nInstallation is complete!");
                     utils::hide_current_win(&mut windows, current_win_id);
                     done_win.show();
                 }

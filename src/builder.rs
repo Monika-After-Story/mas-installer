@@ -1,9 +1,15 @@
+use std::sync::{
+    Arc,
+    atomic::AtomicBool
+};
+
 use fltk::{
     app::{
         App,
         Sender,
         screen_size,
         event_dy,
+        event as get_last_event,
         MouseWheel
     },
     button::{
@@ -48,7 +54,7 @@ use fltk::{
 
 use crate::{
     styles::*,
-    // utils::*,
+    utils::{get_flag, load_icon},
     Message,
     static_data
 };
@@ -63,12 +69,30 @@ pub fn build_app() -> App {
 /// Builds an outer window
 /// This is the main window of the app
 /// Other windows get included into this
-pub fn build_outer_win() -> DoubleWindow {
+pub fn build_outer_win(sender: Sender<Message>, abort_flag: &Arc<AtomicBool>) -> DoubleWindow {
     let mut main_win = Window::default()
         .with_size(WIN_WIDTH, WIN_HEIGHT)
         .with_label(&format!("{} - {}", WIN_TITLE, crate::VERSION.unwrap_or(crate::DEF_VERSION)))
         .center_screen();
     main_win.set_color(C_DDLC_PINK_IDLE);
+
+    // This is so we can first show the abort screen, then quit
+    // when the user clicks X
+    main_win.set_callback(
+        {
+            let abort_flag = abort_flag.clone();
+            move |_| {
+                if get_last_event() == Event::Close {
+                    match get_flag(&abort_flag) {
+                        false => sender.send(Message::Abort),
+                        true => sender.send(Message::Close)
+                    };
+                };
+            }
+        }
+    );
+    // Set app icon
+    load_icon(&mut main_win);
 
     main_win.end();
 
@@ -667,7 +691,7 @@ pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> Doubl
 pub fn build_progress_bar() -> Progress {
     let mut bar = Progress::default()
         .with_size(PB_WIDTH, PB_HEIGHT)
-        .with_pos(0, WIN_HEIGHT/2-PB_HEIGHT/2);
+        .with_pos(INNER_WIN_CONTENT_XPADDING, WIN_HEIGHT/2-PB_HEIGHT/2);
     bar.set_minimum(0.0);
     bar.set_maximum(1.0);
     bar.set_label_font(BUT_FONT);
@@ -685,8 +709,14 @@ pub fn build_propgress_win(sender: Sender<Message>, bar: &Progress) -> DoubleWin
 
     _build_top_frame(PROGRESS_FRAME_LABEL);
 
-    let mut abrt_but = build_button(BUT_ABORT_LABEL, sender, Message::Abort);
-    abrt_but.set_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
+    let mut pack = _build_4but_left_inner_pack();
+    pack.set_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
+    pack.begin();
+
+    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
+    build_volume_but(sender);
+
+    pack.end();
 
     progress_win.add(bar);
 
