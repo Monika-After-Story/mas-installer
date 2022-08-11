@@ -108,7 +108,7 @@ pub const SCROLL_AMOUNT: f64 = 3.0;
 // The number of characters to ignore by the slider,
 // there doesn't appear to be a better way, this value works for us
 // so we hard-code it
-pub const LICENSE_SLIDER_LINES_IGNORE: i32 = 850;
+pub const LICENSE_SLIDER_LINES_IGNORE: i32 = 910;
 pub const LICENSE_SLIDER_WIDTH: i32 = INNER_WIN_CONTENT_XPADDING;
 pub const LICENSE_SLIDER_HEIGHT: i32 = TXT_DISP_HEIGHT;
 pub const LICENSE_SLIDER_SIZE: f32 = 0.2;
