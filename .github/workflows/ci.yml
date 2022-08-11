@@ -19,16 +19,16 @@ jobs:
 
     steps:
       - name: Install Dependencies
+        if: runner.os == 'Linux'
         run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt-get update
           sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev libpng-dev libgl1-mesa-dev libglu1-mesa-dev
-          fi
+          sudo apt install -y --no-install-recommends libasound2-dev pkg-config
 
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Check cache
+      - name: Check Cache
         uses: actions/cache@v3
         with:
           path: |
@@ -39,10 +39,10 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-check-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Cargo check
+      - name: Cargo Check
         run: |
           cargo check --verbose --no-default-features
 
-      - name: Cargo test
+      - name: Cargo Test
         run: |
           cargo test --verbose --no-default-features
