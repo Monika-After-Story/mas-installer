@@ -780,6 +780,7 @@ name = "mas-installer"
 version = "0.1.0"
 dependencies = [
  "fltk",
+ "lazy_static",
  "reqwest",
  "rodio",
  "serde_json",
