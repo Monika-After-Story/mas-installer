@@ -45,7 +45,8 @@ use crate::{
         ExtractionError
     },
     Message,
-    InstallResult
+    InstallResult,
+    static_data
 };
 
 
@@ -104,7 +105,7 @@ pub fn show_previous_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize
 
 /// Loads icon data and sets it as window icon
 pub fn load_icon(win: &mut DoubleWindow) {
-    let icon = image::PngImage::from_data(&crate::APP_ICON_DATA);
+    let icon = image::PngImage::from_data(&static_data::APP_ICON_DATA);
     win.set_icon(icon.ok());
 }
 

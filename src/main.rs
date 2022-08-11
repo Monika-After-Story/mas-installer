@@ -4,6 +4,7 @@ mod app_styles;
 mod builder;
 mod errors;
 mod utils;
+mod static_data;
 
 
 use std::{
@@ -34,17 +35,6 @@ use errors::InstallerError;
 // Get version from the cargo
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 const DEF_VERSION: &str = "unknown build";
-
-// Include the icon
-#[cfg(feature="compile_icon")]
-static APP_ICON_DATA: &'static [u8] = include_bytes!("static/icon.png");
-#[cfg(not(feature="compile_icon"))]
-static APP_ICON_DATA: &'static [u8] = b"";
-// Include license
-#[cfg(feature="compile_license")]
-static APP_LICENSE: &'static str = include_str!("static/license.md");
-#[cfg(not(feature="compile_license"))]
-static APP_LICENSE: &'static str = "";
 
 // GH link parts to accept the API
 const ORG_NAME: &str = "Monika-After-Story";

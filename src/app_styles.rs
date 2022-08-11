@@ -81,9 +81,9 @@ pub const MSG_FRAME_LABEL_SIZE: i32 = LABEL_SIZE_MED;
 
 
 // Text display constants
-pub const TXT_DISP_XPOS: i32 = MID_FRAME_XPOS;
+pub const TXT_DISP_XPOS: i32 = LICENSE_SLIDER_WIDTH;
 pub const TXT_DISP_YPOS: i32 = MID_FRAME_YPOS;
-pub const TXT_DISP_WIDTH: i32 = INNER_WIN_WIDTH;
+pub const TXT_DISP_WIDTH: i32 = INNER_WIN_WIDTH - 2*LICENSE_SLIDER_WIDTH;
 pub const TXT_DISP_HEIGHT: i32 = MID_FRAME_HEIGHT;
 
 
@@ -100,6 +100,17 @@ pub const LABEL_SIZE_MED: i32 = 20;
 // Progress bar consts
 pub const PB_WIDTH: i32 = WIN_WIDTH-2*WIN_PADDING;
 pub const PB_HEIGHT: i32 = BUT_HEIGHT;
+
+
+// Slider consts
+pub const SCROLL_AMOUNT: f64 = 3.0;
+// The number of characters to ignore by the slider,
+// there doesn't appear to be a better way, this value works for us
+// so we hard-code it
+pub const LICENSE_SLIDER_LINES_IGNORE: i32 = 850;
+pub const LICENSE_SLIDER_WIDTH: i32 = 20;
+pub const LICENSE_SLIDER_HEIGHT: i32 = TXT_DISP_HEIGHT;
+pub const LICENSE_SLIDER_SIZE: f32 = 0.2;
 
 
 // Color constants

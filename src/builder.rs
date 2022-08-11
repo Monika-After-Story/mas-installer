@@ -2,7 +2,9 @@ use fltk::{
     app::{
         App,
         Sender,
-        screen_size
+        screen_size,
+        event_dy,
+        MouseWheel
     },
     button::{
         Button,
@@ -20,6 +22,7 @@ use fltk::{
         Pack,
         PackType
     },
+    image,
     text::{
         TextBuffer,
         TextDisplay,
@@ -31,9 +34,12 @@ use fltk::{
         GroupExt,
         WidgetBase,
         DisplayExt,
-        ButtonExt
+        ButtonExt,
+        ValuatorExt,
+        ImageExt
     },
     misc::Progress,
+    valuator::Slider,
     window::{
         Window,
         DoubleWindow
@@ -44,7 +50,7 @@ use crate::{
     app_styles::*,
     // utils::*,
     Message,
-    APP_LICENSE
+    static_data
 };
 
 
@@ -418,6 +424,90 @@ fn _build_abort_back_inst_pack(sender: Sender<Message>) {
 }
 
 
+// Builds a slider for license text display
+fn build_license_txt_slider(mut txt_disp: TextDisplay, max_value: f64) -> Slider {
+    let mut slider = Slider::default()
+        .with_size(LICENSE_SLIDER_WIDTH, LICENSE_SLIDER_HEIGHT)
+        .right_of(&txt_disp, 0);
+
+    slider.set_minimum(0.0);
+    slider.set_maximum(max_value);
+    slider.set_step(1.0, 1);
+    slider.set_slider_size(LICENSE_SLIDER_SIZE);
+    slider.draw(
+        {
+            let mut bar_img = image::PngImage::from_data(static_data::VERTICAL_BAR_DATA).unwrap();
+            let mut thumb_img = image::PngImage::from_data(static_data::VERTICAL_THUMB_DATA).unwrap();
+
+            move |s| {
+                let (x, y, w, h) = (s.x(), s.y(), s.w(), s.h());
+
+                draw::draw_rect_fill(x, y, w, h, C_DDLC_WHITE_IDLE);
+
+                bar_img.draw(x, y, w, h);
+
+                let thumb_h = (LICENSE_SLIDER_HEIGHT as f32 * s.slider_size()) as f64;
+                let thumb_ypos = (
+                    TXT_DISP_YPOS as f64 + ((LICENSE_SLIDER_HEIGHT as f64 - thumb_h) * (s.value() / s.maximum()))
+                ) as i32;
+                thumb_img.draw(x, thumb_ypos, w, h);
+            }
+        }
+    );
+
+    slider.set_callback(
+        move |s| {
+            txt_disp.scroll(s.value() as i32, 0);
+        }
+    );
+
+    return slider;
+
+}
+
+// Sets a hander for license text display
+fn set_license_txt_handler(txt_disp: &mut TextDisplay, slider: Slider, max_value: f64) {
+    txt_disp.handle(
+        {
+            let mut slider = slider.clone();
+
+            move |_, ev| -> bool {
+                let mut current_value = slider.value();
+                match ev {
+                    Event::MouseWheel => {
+                        match event_dy() {
+                            MouseWheel::Up => {
+                                current_value = f64::min(max_value, current_value+SCROLL_AMOUNT)
+                            },
+                            MouseWheel::Down => {
+                                current_value = f64::max(0.0, current_value-SCROLL_AMOUNT);
+                            },
+                            _ => return false
+                        }
+                        slider.set_value(current_value);
+                        return true
+                    },
+                    _ => return false
+                }
+            }
+        }
+    );
+}
+
+// Builds license text display
+// NOTE: the text display will need a handler
+fn build_license_txt(buf: TextBuffer) -> TextDisplay {
+    let mut txt_disp = TextDisplay::default()
+        .with_size(TXT_DISP_WIDTH, TXT_DISP_HEIGHT)
+        .with_pos(TXT_DISP_XPOS, TXT_DISP_YPOS);
+        txt_disp.wrap_mode(WrapMode::AtBounds, 0);
+        txt_disp.set_selection_color(C_DDLC_PINK_DARK);
+        txt_disp.set_scrollbar_size(-1);
+        txt_disp.set_buffer(buf);
+
+    return txt_disp;
+}
+
 /// Builds the license window
 pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     let license_win = build_inner_win();
@@ -427,14 +517,18 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     _build_top_frame(LICENSE_FRAME_LABEL);
 
     let mut buf = TextBuffer::default();
-    buf.set_text(APP_LICENSE);
+    buf.set_text(static_data::APP_LICENSE);
+    let total_chars = buf.length();
 
-    let mut txt = TextDisplay::default()
-        .with_size(TXT_DISP_WIDTH, TXT_DISP_HEIGHT)
-        .with_pos(TXT_DISP_XPOS, TXT_DISP_YPOS);
-    txt.wrap_mode(WrapMode::AtBounds, 0);
-    txt.set_selection_color(C_DDLC_PINK_DARK);
-    txt.set_buffer(buf);
+    let mut txt_disp = build_license_txt(buf);
+
+    let total_lines = txt_disp.count_lines(
+        0, total_chars-LICENSE_SLIDER_LINES_IGNORE, true
+    ) as f64;
+
+    let slider = build_license_txt_slider(txt_disp.clone(), total_lines);
+
+    set_license_txt_handler(&mut txt_disp, slider.clone(), total_lines);
 
     _build_abort_back_contn_pack(sender);
 
@@ -465,6 +559,7 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
     txt.set_text_size(SEL_DIR_TXT_SIZE);
     txt.wrap_mode(WrapMode::None, 0);
     txt.set_selection_color(C_DDLC_PINK_DARK);
+    txt.set_scrollbar_size(-1);
     txt.set_buffer(txt_buf);
 
     build_sel_dir_button(BUT_SELECT_DIR_LABEL, sender, Message::SelectDir);
