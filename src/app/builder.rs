@@ -624,12 +624,13 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
         .with_pos(SEL_DIR_TXT_XPOS, SEL_DIR_TXT_YPOS);
     txt.set_text_size(SEL_DIR_TXT_SIZE);
     txt.wrap_mode(WrapMode::None, 0);
+    txt.set_frame(FrameType::EngravedFrame);
     txt.set_selection_color(C_DDLC_PINK_DARK);
     txt.set_scrollbar_size(-1);
     txt.set_buffer(txt_buf);
 
     let mut but = build_button(BUT_SELECT_DIR_LABEL, sender, Message::SelectDir);
-    but.set_pos(INNER_WIN_CONTENT_XPADDING+SEL_DIR_TXT_WIDTH-BUT_WIDTH, SEL_DIR_TXT_YPOS+SEL_DIR_TXT_HEIGHT);
+    but.set_pos(INNER_WIN_CONTENT_XPADDING+SEL_DIR_TXT_WIDTH-BUT_WIDTH, SEL_DIR_TXT_YPOS+SEL_DIR_TXT_HEIGHT+BUT_SPACING/2);
 
     _build_abort_back_contn_pack(sender);
 
