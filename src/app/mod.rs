@@ -207,6 +207,14 @@ impl InstallerApp {
                         println!("Done!\nExtracting...");
                         self.progress_bar.set_label("Extracting...");
                     },
+                    Message::DownloadingSpr => {
+                        println!("Done!\nDownloading spritepacks...");
+                        self.progress_bar.set_label("Downloading spritepacks...");
+                    },
+                    Message::ExtractingSpr => {
+                        println!("Done!\nExtracting spritepacks...");
+                        self.progress_bar.set_label("Extracting spritepacks...");
+                    },
                     Message::CleaningUp => {
                         println!("Done!\nCleaning up...");
                         self.progress_bar.set_label("Cleaning up...");

@@ -22,6 +22,7 @@ const REPO_NAME: &str = "MonikaModDev";
 // IDs of assets in github release
 const DEF_VERSION_ASSET_ID: usize = 1;
 const DLX_VERSION_ASSET_ID: usize = 0;
+const SPR_ASSET_ID: usize = 3;
 
 
 #[derive(Clone, Copy)]
@@ -38,6 +39,8 @@ pub enum Message {
     Preparing,
     Downloading,
     Extracting,
+    DownloadingSpr,
+    ExtractingSpr,
     CleaningUp,
     Error,
     Abort,
