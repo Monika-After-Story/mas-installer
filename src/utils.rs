@@ -155,7 +155,7 @@ pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
 /// Launches alert dialogue
 /// NOTE: modal
 pub fn run_alert_dlg(msg: &str) {
-    let mut win = crate::builder::build_alert_win(
+    let mut win = crate::app::builder::build_alert_win(
         msg
     );
     win.show();
@@ -168,7 +168,7 @@ pub fn run_alert_dlg(msg: &str) {
 /// Launches message dialogue
 /// NOTE: modal
 pub fn run_msg_dlg(msg: &str) {
-    let mut win = crate::builder::build_msg_win(
+    let mut win = crate::app::builder::build_msg_win(
         msg
     );
     win.show();

@@ -1,6 +1,7 @@
 /// The module that implements our app
 
 pub mod state;
+pub mod builder;
 
 
 use std::{thread, mem, path::PathBuf};
@@ -23,7 +24,7 @@ use fltk::{
 
 use state::{ThreadSafeState, build_thread_safe_state};
 use crate::{Message, InstallResult};
-use super::{audio, builder, utils, styles, errors};
+use super::{audio, utils, styles, errors};
 use errors::InstallerError;
 
 

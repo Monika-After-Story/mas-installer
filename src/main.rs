@@ -1,7 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 // #![allow(dead_code, unused_imports, unused_mut, unused_variables)]// TODO: remove me
 mod styles;
-mod builder;
 mod errors;
 mod utils;
 mod static_data;
