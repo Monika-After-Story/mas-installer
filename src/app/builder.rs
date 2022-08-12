@@ -260,7 +260,7 @@ fn _draw_check_button(b: &mut CheckButton) {
 
 /// Builds a check button with the given parameters
 /// ev handler, and draw func are pre-defined
-fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message) -> CheckButton {
+fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message, is_checked: bool) -> CheckButton {
     let mut but = CheckButton::default()
         .with_size(width, height)
         .with_label(label);
@@ -269,23 +269,12 @@ fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Mess
     but.emit(sender, msg);
     but.handle(_handle_check_button);
     but.draw(_draw_check_button);
+    but.set_checked(is_checked);
     but.set_frame(FrameType::NoBox);
     but.set_down_frame(FrameType::NoBox);
 
     return but;
 }
-
-// pub fn build_check_button(label: &str, sender: Sender<Message>, msg: Message) -> CheckButton {
-//     let but = _build_check_button(
-//         BUT_WIDTH,
-//         BUT_HEIGHT,
-//         label,
-//         sender,
-//         msg
-//     );
-
-//     return but;
-// }
 
 
 fn draw_volume_button(b: &mut Button) {
@@ -652,7 +641,7 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
 
 
 /// Builds the options window with various settings for installer
-pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> DoubleWindow {
+pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool, install_spr: bool) -> DoubleWindow {
     let options_win = build_inner_win();
     options_win.begin();
 
@@ -660,20 +649,29 @@ pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> Doubl
     _build_top_frame(OPTIONS_FRAME_LABEL);
 
 
-    const BUT_USE_DLX_VERSION_WIDTH: i32 = BUT_WIDTH+225;
-    const TOTAL_BUTS: i32 = 1;
-    const XPOS: i32 = INNER_WIN_WIDTH/2 - BUT_USE_DLX_VERSION_WIDTH/2;
-    const YPOS: i32 = INNER_WIN_HEIGHT/2 - TOTAL_BUTS*BUT_HEIGHT/2;
+    const TOTAL_BUTS: i32 = 2;
+    const XPOS: i32 = INNER_WIN_CONTENT_XPADDING;
+    const YPOS: i32 = INNER_WIN_HEIGHT/2 - TOTAL_BUTS*BUT_HEIGHT/2 - (TOTAL_BUTS-1)*BUT_SPACING/2;
+    const YPOS_INC: i32 = BUT_HEIGHT + BUT_SPACING;
 
     let mut but_inst_dlx = _build_check_button(
-        BUT_USE_DLX_VERSION_WIDTH,
-        BUT_HEIGHT,
-        BUT_USE_DLX_VERSION_LABEL,
+        BUT_DLX_VER_CHECK_WIDTH,
+        BUT_DLX_VER_CHECK_HEIGHT,
+        BUT_DLX_VER_CHECK_LABEL,
         sender,
-        Message::DlxVersionCheck
+        Message::DlxVersionCheck,
+        is_dlx_version
     );
-    but_inst_dlx.set_checked(is_dlx_version);
     but_inst_dlx.set_pos(XPOS, YPOS);
+    let mut but_inst_spr = _build_check_button(
+        BUT_INSTALL_SPR_CHECK_WIDTH,
+        BUT_INSTALL_SPR_CHECK_HEIGHT,
+        BUT_INSTALL_SPR_CHECK_LABEL,
+        sender,
+        Message::InstallSprCheck,
+        install_spr
+    );
+    but_inst_spr.set_pos(XPOS, YPOS+YPOS_INC);
 
 
     _build_abort_back_inst_pack(sender);

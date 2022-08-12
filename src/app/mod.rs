@@ -50,13 +50,13 @@ pub struct InstallerApp {
     abort_window: DoubleWindow,
     done_window: DoubleWindow,
 
-    // // Audio manager, option because audio might not work
+    // Audio manager, option because audio might not work
     audio_manager: Option<audio::AudioManager>,
 
-    // // Handle to the installer thread, option because we might not start it/close early
+    // Handle to the installer thread, option because we might not start it/close early
     installer_th_handle: Option<thread::JoinHandle<InstallResult>>,
 
-    // // These need to be updated
+    // These need to be updated
     path_txt_buf: TextBuffer,
     progress_bar: Progress
 }
@@ -74,13 +74,18 @@ impl InstallerApp {
         let main_window = builder::build_outer_win(sender, &state);
         main_window.begin();
 
-        let linked_windows = [
-            builder::build_welcome_win(sender),
-            builder::build_license_win(sender),
-            builder::build_select_dir_win(sender, path_txt_buf.clone()),
-            builder::build_options_win(sender, state.lock().unwrap().get_deluxe_ver_flag()),
-            builder::build_propgress_win(sender, &progress_bar)
-        ];
+        let linked_windows = {
+            let s = state.lock().unwrap();
+            let is_dlx_version = s.get_deluxe_ver_flag();
+            let install_spr = s.get_install_spr_flag();
+            [
+                builder::build_welcome_win(sender),
+                builder::build_license_win(sender),
+                builder::build_select_dir_win(sender, path_txt_buf.clone()),
+                builder::build_options_win(sender, is_dlx_version, install_spr),
+                builder::build_propgress_win(sender, &progress_bar)
+            ]
+        };
 
         let abort_window = builder::build_abort_win(sender);
         let done_window = builder::build_done_win(sender);
@@ -153,6 +158,14 @@ impl InstallerApp {
                             false => println!("Using standard version...")
                         };
                     },
+                    Message::InstallSprCheck => {
+                        let mut app_state = self.state.lock().unwrap();
+                        app_state.invert_install_spr_flag();
+                        match app_state.get_install_spr_flag() {
+                            true => println!("Including spritepacks..."),
+                            false => println!("Excluding spritepacks...")
+                        };
+                    }
                     Message::VolumeCheck => {
                         if let Some(ref am) = self.audio_manager {
                             if am.get_volume() == 0.0{

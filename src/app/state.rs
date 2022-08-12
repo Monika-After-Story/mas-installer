@@ -15,18 +15,20 @@ pub type ThreadSafeState = Arc<Mutex<AppState>>;
 /// Struct representing app state
 #[derive(Debug)]
 pub struct AppState {
+    extraction_dir: PathBuf,
     abort_flag: bool,
     deluxe_ver_flag: bool,
-    extraction_dir: PathBuf
+    install_spr_flag: bool
 }
 
 impl AppState {
     /// Creates a new AppState
-    pub fn new(abort_flag: bool, deluxe_ver_flag: bool, extraction_dir: PathBuf) -> Self {
+    pub fn new( extraction_dir: PathBuf, abort_flag: bool, deluxe_ver_flag: bool, install_spr_flag: bool) -> Self {
         return Self {
+            extraction_dir,
             abort_flag,
             deluxe_ver_flag,
-            extraction_dir
+            install_spr_flag
         };
     }
 
@@ -56,6 +58,22 @@ impl AppState {
         self.deluxe_ver_flag = !self.deluxe_ver_flag;
     }
 
+    /// Returns the install spritepacks flag
+    pub fn get_install_spr_flag(&self) -> bool {
+        return self.install_spr_flag;
+    }
+
+    /// Sets the install spritepacks flag
+    #[allow(dead_code)]
+    pub fn set_install_spr_flag(&mut self, value: bool) {
+        self.install_spr_flag = value;
+    }
+
+    /// Inverts the install spritepacks flag
+    pub fn invert_install_spr_flag(&mut self) {
+        self.install_spr_flag = !self.install_spr_flag;
+    }
+
     /// Returns the extraction directory
     pub fn get_extraction_dir(&self) -> &PathBuf {
         return &self.extraction_dir;
@@ -75,9 +93,10 @@ impl AppState {
 impl Default for AppState {
     fn default() -> Self {
         return Self::new(
+            crate::utils::get_cwd(),
             false,
             true,
-            crate::utils::get_cwd()
+            false
         );
     }
 }

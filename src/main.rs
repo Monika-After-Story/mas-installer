@@ -32,6 +32,7 @@ pub enum Message {
     PrevPage,
     SelectDir,
     DlxVersionCheck,
+    InstallSprCheck,
     VolumeCheck,
     Install,
     Preparing,

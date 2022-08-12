@@ -17,4 +17,4 @@ pub static VOLUME_BUT_HOVER_DATA: &'static [u8] = include_bytes!("static/but_vol
 
 // Sounds
 // Credits: Ludum Dare 28 - Tracks 1 and 3 by @ben_burnes http://abstractionmusic.bandcamp.com/
-pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/ludum_dare_28_track_3.ogg");
+pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/ludum_dare_28_track_1.ogg");
