@@ -239,6 +239,7 @@ impl InstallerApp {
                     },
                     Message::Done => {
                         println!("Done!\nInstallation is complete!");
+                        self.abort_installation();
                         self.hide_current_window();
                         self.done_window.show();
                     }
