@@ -50,12 +50,11 @@ use fltk::{
 };
 
 use crate::{
-    app::state::ThreadSafeState,
-    styles::*,
     utils::load_icon,
     Message,
     static_data
 };
+use super::{styles::*, state::ThreadSafeState};
 
 
 /// Builds a default fltk app

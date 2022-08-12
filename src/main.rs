@@ -1,11 +1,11 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-// #![allow(dead_code, unused_imports, unused_mut, unused_variables)]// TODO: remove me
-mod styles;
-mod errors;
-mod utils;
-mod static_data;
-mod audio;
+/// Program entry point
+
 mod app;
+mod audio;
+mod errors;
+mod static_data;
+mod utils;
 
 
 use errors::InstallerError;
