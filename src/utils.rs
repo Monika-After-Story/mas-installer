@@ -1,14 +1,12 @@
+/// Module with utils functions
+
 use std::{
     env,
-    path::PathBuf,
+    path::{Path, PathBuf},
     fs::{File, create_dir_all, read_dir},
     io,
-    cmp::{min},
+    cmp::min,
     thread,
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering}
-    },
     time::Duration
 };
 
@@ -39,72 +37,33 @@ use reqwest::{
 use zip::ZipArchive;
 
 use crate::{
+    app::state::ThreadSafeState,
     errors::{
         InstallerError,
         DownloadError,
         ExtractionError
     },
     Message,
-    InstallResult
+    InstallResult,
+    static_data
 };
 
 
-const PAUSE_DURATION: Duration = Duration::from_millis(250);
+const PAUSE_DURATION: Duration = Duration::from_millis(200);
 
 
-/// Multiplies int by float and returns int
-/// Useful to position widgets relatively of the windows size
-// pub fn mul_int_float(a: i32, b: f32) -> i32 {
-//     return (a as f32 * b) as i32;
-// }
-
-
-/// Changes current active windows by hiding one window and showing another
-pub fn switch_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize, new_id: usize) {
-    let cur_id = *current_id;
-    // Sanity check
-    if cur_id >= windows.len() || new_id >= windows.len() {
-        return;
-    }
-    windows[cur_id].hide();
-    windows[new_id].show();
-    *current_id = new_id;
-}
-
-pub fn hide_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
-    if current_id >= windows.len() {
-        return;
-    }
-    windows[current_id].hide();
-}
-
-// #[allow(dead_code)]
-// pub fn show_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
-//     if current_id >= windows.len() {
-//         return;
-//     }
-//     windows[current_id].show();
-// }
-
-/// Hides current and shows next (current id + 1) window
-pub fn show_next_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize) {
-    switch_win(windows, current_id, *current_id+1);
-}
-
-/// Hides current and shows previous (current id - 1) window
-pub fn show_previous_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize) {
-    let cur_id = *current_id;
-    // Just so we don't get overflow
-    if cur_id == 0 {
-        return;
-    }
-    switch_win(windows, current_id, cur_id-1);
+/// Struct representing release data we may need
+/// (like download links)
+struct ReleaseData {
+    def_dl_link: String,
+    dlx_dl_link: String,
+    spr_dl_link: String
 }
 
 
 /// Loads icon data and sets it as window icon
 pub fn load_icon(win: &mut DoubleWindow) {
-    let icon = image::PngImage::from_data(&crate::APP_ICON_DATA);
+    let icon = image::PngImage::from_data(&static_data::APP_ICON_DATA);
     win.set_icon(icon.ok());
 }
 
@@ -205,7 +164,7 @@ pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
 /// Launches alert dialogue
 /// NOTE: modal
 pub fn run_alert_dlg(msg: &str) {
-    let mut win = crate::builder::build_alert_win(
+    let mut win = crate::app::builder::build_alert_win(
         msg
     );
     win.show();
@@ -218,7 +177,7 @@ pub fn run_alert_dlg(msg: &str) {
 /// Launches message dialogue
 /// NOTE: modal
 pub fn run_msg_dlg(msg: &str) {
-    let mut win = crate::builder::build_msg_win(
+    let mut win = crate::app::builder::build_msg_win(
         msg
     );
     win.show();
@@ -226,19 +185,6 @@ pub fn run_msg_dlg(msg: &str) {
         wait();
     }
     drop(win);
-}
-
-
-/// Checks atomic bool within an arc and returns its value
-/// NOTE: USES Ordering::Relaxed
-pub fn get_flag(flag: &Arc<AtomicBool>) -> bool {
-    return flag.load(Ordering::Relaxed);
-}
-
-/// Sets atomic bool within an arc and returns its value
-/// NOTE: USES Ordering::Relaxed
-pub fn set_flag(flag: &Arc<AtomicBool>, value: bool) {
-    flag.store(value, Ordering::Relaxed);
 }
 
 
@@ -266,7 +212,9 @@ pub fn build_client() -> Result<req_blocking::Client, InstallerError> {
 
 /// Returns tuple of two links to the main assets:
 /// defaul version download and deluxe version download
-fn _get_assets_links(client: &req_blocking::Client) -> Result<(String, String), InstallerError> {
+fn get_release_data(client: &req_blocking::Client) -> Result<ReleaseData, InstallerError> {
+    const DL_URL_KEY: &str = "browser_download_url";
+
     let data = client.get(
         format!(
             "https://api.github.com/repos/{}/{}/releases/latest",
@@ -278,16 +226,25 @@ fn _get_assets_links(client: &req_blocking::Client) -> Result<(String, String), 
     let json_data: serde_json::Value = serde_json::from_slice(&data)?;
     let assets_list = json_data.get("assets").ok_or(InstallerError::CorruptedJSON("missing the assets field"))?;
 
-    let def_link = assets_list.get(crate::DEF_VERSION_ASSET_ID).ok_or(InstallerError::CorruptedJSON("missing the def version asset"))?
-        .get("browser_download_url").ok_or(InstallerError::CorruptedJSON("missing the def version download link field"))?
+    let def_dl_link = assets_list.get(crate::DEF_VERSION_ASSET_ID).ok_or(InstallerError::CorruptedJSON("missing the def version asset"))?
+        .get(DL_URL_KEY).ok_or(InstallerError::CorruptedJSON("missing the def version download link field"))?
         .as_str().ok_or(InstallerError::CorruptedJSON("couldn't parse link to a str"))?
         .to_owned();
-    let dlx_link = assets_list.get(crate::DLX_VERSION_ASSET_ID).ok_or(InstallerError::CorruptedJSON("missing the deluxe version asset"))?
-        .get("browser_download_url").ok_or(InstallerError::CorruptedJSON("missing the dlx version download link field"))?
+    let dlx_dl_link = assets_list.get(crate::DLX_VERSION_ASSET_ID).ok_or(InstallerError::CorruptedJSON("missing the deluxe version asset"))?
+        .get(DL_URL_KEY).ok_or(InstallerError::CorruptedJSON("missing the dlx version download link field"))?
+        .as_str().ok_or(InstallerError::CorruptedJSON("couldn't parse link to a str"))?
+        .to_owned();
+    let spr_dl_link = assets_list.get(crate::SPR_ASSET_ID).ok_or(InstallerError::CorruptedJSON("missing spritepack asset"))?
+        .get(DL_URL_KEY).ok_or(InstallerError::CorruptedJSON("missing the spritepacks download link field"))?
         .as_str().ok_or(InstallerError::CorruptedJSON("couldn't parse link to a str"))?
         .to_owned();
 
-    return Ok((def_link, dlx_link));
+    let data = ReleaseData {
+        def_dl_link,
+        dlx_dl_link,
+        spr_dl_link
+    };
+    return Ok(data);
 }
 
 /// Downloads data from the given link using the provided client
@@ -295,20 +252,21 @@ fn _get_assets_links(client: &req_blocking::Client) -> Result<(String, String), 
 fn _download_to_file(
     client: &req_blocking::Client,
     sender: Sender<Message>,
-    abort_flag: &Arc<AtomicBool>,
+    app_state: &ThreadSafeState,
     download_link: &str,
     file: &mut File
 ) -> Result<(), DownloadError> {
     const DEF_CHUNK_SIZE: u128 = 1024*1024*8 + 1;
 
-    if get_flag(abort_flag) {
+    sender.send(Message::UpdateProgressBar(0.0));
+
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
 
-    sender.send(Message::UpdateProgressBar(0.0));
-
     let resp = client.head(download_link).send()?;
-    let content_size = resp.headers().get(headers::CONTENT_LENGTH).ok_or(DownloadError::InvalidContentLen)?
+    let content_size = resp.headers().get(headers::CONTENT_LENGTH)
+        .ok_or(DownloadError::InvalidContentLen)?
         .to_str().ok().ok_or(DownloadError::InvalidContentLen)?
         .parse::<u128>().ok().ok_or(DownloadError::InvalidContentLen)?;
 
@@ -354,7 +312,7 @@ fn _download_to_file(
         // Slep to let the server rest
         sleep();
         // See if we want to abort
-        if get_flag(abort_flag) {
+        if app_state.lock().unwrap().get_abort_flag() {
             return Ok(());
         }
     }
@@ -367,15 +325,15 @@ fn _download_to_file(
 /// Extracts a zip archive
 fn _extract_archive(
     sender: Sender<Message>,
-    abort_flag: &Arc<AtomicBool>,
+    app_state: &ThreadSafeState,
     archive: &File,
-    destination_dir: &PathBuf
+    destination: &Path
 ) -> Result<(), ExtractionError> {
-    if get_flag(abort_flag) {
+    sender.send(Message::UpdateProgressBar(0.0));
+
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
-
-    sender.send(Message::UpdateProgressBar(0.0));
 
     let mut archive = ZipArchive::new(archive)?;
     let total_files = archive.len();
@@ -386,7 +344,7 @@ fn _extract_archive(
         let file_path = file.enclosed_name()
             .ok_or(ExtractionError::UnsafeFilepath(file.name().to_string()))?;
 
-        let extraction_path = destination_dir.join(file_path);
+        let extraction_path = destination.join(file_path);
 
         // Extract the dir
         if file.is_dir() {
@@ -410,7 +368,7 @@ fn _extract_archive(
         sender.send(Message::UpdateProgressBar(pb_val));
 
         // See if we want to abort
-        if get_flag(abort_flag) {
+        if app_state.lock().unwrap().get_abort_flag() {
             return Ok(());
         }
     }
@@ -425,8 +383,8 @@ fn _create_temp_dir() -> Result<tempfile::TempDir, io::Error> {
 }
 
 /// Creates a temp file for the installer data
-fn _create_temp_file(temp_dir: &tempfile::TempDir) -> Result<File, io::Error> {
-    let fp = temp_dir.path().join("temp");
+fn _create_temp_file(temp_dir: &tempfile::TempDir, name: &str) -> Result<File, io::Error> {
+    let fp = temp_dir.path().join(name);
     return File::options()
         .write(true)
         .read(true)
@@ -435,49 +393,62 @@ fn _create_temp_file(temp_dir: &tempfile::TempDir) -> Result<File, io::Error> {
         .open(&fp);
 }
 
+/// This runs cleanup logic on SUCCESSFUL download
+fn cleanup(sender: Sender<Message>, mas_temp_file: File, spr_temp_file: File) {
+    sender.send(Message::CleaningUp);
+    sender.send(Message::UpdateProgressBar(0.0));
+    drop(mas_temp_file);
+    drop(spr_temp_file);
+    sleep();
+    sender.send(Message::UpdateProgressBar(1.0));
+    sleep();
+    sender.send(Message::Done);
+}
+
 /// Main method to handle game installation process, downloads it into a temp folder and then extracts
 pub fn install_game(
-    destination_dir: &PathBuf,
     sender: Sender<Message>,
-    abort_flag: &Arc<AtomicBool>,
-    is_deluxe: bool
+    app_state: &ThreadSafeState
 ) -> InstallResult {
     sender.send(Message::Preparing);
     sender.send(Message::UpdateProgressBar(0.0));
 
-    if get_flag(abort_flag) {
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
 
     let client = build_client()?;
 
     // Get download link
-    let (def, dlx) = _get_assets_links(&client)?;
-    let download_link = match is_deluxe {
-        true => dlx,
-        false => def
+    let data = get_release_data(&client)?;
+    let download_link = match app_state.lock().unwrap().get_deluxe_ver_flag() {
+        true => data.dlx_dl_link,
+        false => data.def_dl_link
     };
     // let download_link = String::from("https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.9/spritepacks-combined.zip");
+    let destination = app_state.lock().unwrap().get_extraction_dir().clone();
+
     sender.send(Message::UpdateProgressBar(0.5));
     sleep();
 
     // Create temp structures
     let temp_dir = _create_temp_dir()?;
-    let mut temp_file = _create_temp_file(&temp_dir)?;
+    let mut mas_temp_file = _create_temp_file(&temp_dir, "mas.tmp")?;
+    let mut spr_temp_file = _create_temp_file(&temp_dir, "spr.tmp")?;
 
     sender.send(Message::UpdateProgressBar(1.0));
     sleep();
 
-    // Install
+    // Install MAS
     sender.send(Message::Downloading);
     _download_to_file(
         &client,
         sender,
-        abort_flag,
+        app_state,
         &download_link,
-        &mut temp_file
+        &mut mas_temp_file
     )?;
-    if get_flag(abort_flag) {
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
     sleep();
@@ -485,42 +456,63 @@ pub fn install_game(
     sender.send(Message::Extracting);
     _extract_archive(
         sender,
-        abort_flag,
-        &temp_file,
-        destination_dir
+        app_state,
+        &mas_temp_file,
+        &destination
     )?;
-    if get_flag(abort_flag) {
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
     sleep();
 
-    sender.send(Message::CleaningUp);
-    sender.send(Message::UpdateProgressBar(0.0));
-    drop(temp_file);
-    sleep();
-    sender.send(Message::UpdateProgressBar(1.0));
+    // Quit early if the user doesn't want spritepacks
+    if !app_state.lock().unwrap().get_install_spr_flag() {
+        cleanup(sender, mas_temp_file, spr_temp_file);
+        return Ok(());
+    }
+
+    // Install spritepacks
+    sender.send(Message::DownloadingSpr);
+    _download_to_file(
+        &client,
+        sender,
+        app_state,
+        &data.spr_dl_link,
+        &mut spr_temp_file
+    )?;
+    if app_state.lock().unwrap().get_abort_flag() {
+        return Ok(());
+    }
     sleep();
 
-    sender.send(Message::Done);
+    sender.send(Message::ExtractingSpr);
+    _extract_archive(
+        sender,
+        app_state,
+        &spr_temp_file,
+        &destination.join("spritepacks")
+    )?;
+    if app_state.lock().unwrap().get_abort_flag() {
+        return Ok(());
+    }
+    sleep();
+
+    cleanup(sender, mas_temp_file, spr_temp_file);
 
     return Ok(());
 }
 
 /// Threaded version of install_game
 pub fn install_game_in_thread(
-    destination_dir: &PathBuf,
     sender: Sender<Message>,
-    abort_flag: &Arc<AtomicBool>,
-    is_deluxe: bool
+    app_state: &ThreadSafeState
 ) -> thread::JoinHandle<InstallResult> {
 
-    let destination_dir = destination_dir.clone();
-    // let sender = sender.clone();
-    let abort_flag = abort_flag.clone();
+    let app_state = app_state.clone();
 
     return thread::spawn(
         move || -> InstallResult {
-            return match install_game(&destination_dir, sender, &abort_flag, is_deluxe) {
+            return match install_game(sender, &app_state) {
                 Err(e) => {
                     sender.send(Message::Error);
                     Err(e)

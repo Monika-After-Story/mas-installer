@@ -1,10 +1,10 @@
-#[cfg(all(windows, feature="compile_icon"))]
+#[cfg(windows)]
 fn main() {
     let mut res = winres::WindowsResource::new();
     res.set_icon("src/static/icon.ico");
     res.compile().unwrap();// I want it to panic if it fails
 }
 
-#[cfg(any(not(windows), not(feature="compile_icon")))]
+#[cfg(not(windows))]
 fn main() {
 }

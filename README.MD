@@ -10,6 +10,7 @@ Cross-platform installer for [Monika After Story](https://github.com/Monika-Afte
 - Small executables size
 - Fast
 - Dynamic version fetching
+- Music during installation
 
 ### Main stack:
 - Rust 1.25

@@ -1,8 +1,13 @@
+/// Module with functions to build fltk widgets
+
 use fltk::{
     app::{
         App,
         Sender,
-        screen_size
+        screen_size,
+        event_dy,
+        event as get_last_event,
+        MouseWheel
     },
     button::{
         Button,
@@ -20,6 +25,7 @@ use fltk::{
         Pack,
         PackType
     },
+    image,
     text::{
         TextBuffer,
         TextDisplay,
@@ -31,9 +37,12 @@ use fltk::{
         GroupExt,
         WidgetBase,
         DisplayExt,
-        ButtonExt
+        ButtonExt,
+        ValuatorExt,
+        ImageExt
     },
     misc::Progress,
+    valuator::Slider,
     window::{
         Window,
         DoubleWindow
@@ -41,14 +50,14 @@ use fltk::{
 };
 
 use crate::{
-    app_styles::*,
-    // utils::*,
+    utils::load_icon,
     Message,
-    APP_LICENSE
+    static_data
 };
+use super::{styles::*, state::ThreadSafeState};
 
 
-/// Builds a default app
+/// Builds a default fltk app
 pub fn build_app() -> App {
     return App::default();
 }
@@ -57,12 +66,31 @@ pub fn build_app() -> App {
 /// Builds an outer window
 /// This is the main window of the app
 /// Other windows get included into this
-pub fn build_outer_win() -> DoubleWindow {
+pub fn build_outer_win(sender: Sender<Message>, app_state: &ThreadSafeState) -> DoubleWindow {
     let mut main_win = Window::default()
         .with_size(WIN_WIDTH, WIN_HEIGHT)
-        .with_label(WIN_TITLE)
+        .with_label(&format!("{} - {}", WIN_TITLE, crate::VERSION.unwrap_or(crate::DEF_VERSION)))
         .center_screen();
     main_win.set_color(C_DDLC_PINK_IDLE);
+
+    // This is so we can first show the abort screen, then quit
+    // when the user clicks X
+    main_win.set_callback(
+        {
+            let app_state = app_state.clone();
+            move |_| {
+                if get_last_event() == Event::Close {
+                    let abort_flag = app_state.lock().unwrap().get_abort_flag();
+                    match abort_flag {
+                        false => sender.send(Message::Abort),
+                        true => sender.send(Message::Close)
+                    };
+                };
+            }
+        }
+    );
+    // Set app icon
+    load_icon(&mut main_win);
 
     main_win.end();
 
@@ -185,17 +213,6 @@ pub fn build_button(label: &str, sender: Sender<Message>, msg: Message) -> Butto
     return but;
 }
 
-/// Builds a select directory dialogue button
-pub fn build_sel_dir_button(label: &str, sender: Sender<Message>, msg: Message) -> Button {
-    return _build_button_adv(
-        BUT_SEL_DIR_WIDTH,
-        BUT_SEL_DIR_HEIGHT,
-        label,
-        sender,
-        msg
-    );
-}
-
 
 /// Callback for handling buttons events.
 /// Allows to handle hover events
@@ -243,7 +260,7 @@ fn _draw_check_button(b: &mut CheckButton) {
 
 /// Builds a check button with the given parameters
 /// ev handler, and draw func are pre-defined
-fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message) -> CheckButton {
+fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Message>, msg: Message, is_checked: bool) -> CheckButton {
     let mut but = CheckButton::default()
         .with_size(width, height)
         .with_label(label);
@@ -252,66 +269,126 @@ fn _build_check_button(width: i32, height: i32, label: &str, sender: Sender<Mess
     but.emit(sender, msg);
     but.handle(_handle_check_button);
     but.draw(_draw_check_button);
+    but.set_checked(is_checked);
     but.set_frame(FrameType::NoBox);
     but.set_down_frame(FrameType::NoBox);
 
     return but;
 }
 
-// pub fn build_check_button(label: &str, sender: Sender<Message>, msg: Message) -> CheckButton {
-//     let but = _build_check_button(
-//         BUT_WIDTH,
-//         BUT_HEIGHT,
-//         label,
-//         sender,
-//         msg
-//     );
 
-//     return but;
-// }
+fn draw_volume_button(b: &mut Button) {
+    let (b_x, b_y, b_w, b_h) = (b.x(), b.y(), b.w(), b.h());
 
+    let (frame_color, bg_color) = match b.has_visible_focus() {
+        true => (C_DDLC_PINK_ACT, C_DDLC_WHITE_ACT),
+        false => (C_DDLC_PINK_IDLE, C_DDLC_WHITE_IDLE)
+    };
 
-/// Builds a frame at the given position
-fn _build_frame(xpos: i32, ypos: i32) -> Frame {
-    let frame = Frame::default()
-        .with_size(INNER_WIN_WIDTH-xpos, INNER_WIN_HEIGHT-ypos)
-        .with_pos(xpos, ypos);
-        // .with_align(Align::Top | Align::Inside)
-        // .with_label(label);
-
-    return frame;
+    draw::draw_rect_fill(b_x, b_y, b_w, b_h, frame_color);
+    draw::draw_rect_fill(b_x+BUT_PADDING, b_y+BUT_PADDING, b_w-BUT_PADDING*2, b_h-BUT_PADDING*2, bg_color);
+    if b.has_visible_focus() {
+        VOLUME_BUT_HOVER_IMG.lock().unwrap().draw(b_x+BUT_PADDING, b_y+BUT_PADDING, b_w-BUT_PADDING*2, b_h-BUT_PADDING*2);
+    }
+    else {
+        VOLUME_BUT_IMG.lock().unwrap().draw(b_x+BUT_PADDING, b_y+BUT_PADDING, b_w-BUT_PADDING*2, b_h-BUT_PADDING*2);
+    }
+    b.redraw();
 }
+
+/// Builds a button to control volume
+pub fn build_volume_but(sender: Sender<Message>) -> Button {
+    let mut but = _build_button_base(
+        BUT_MUTE_WIDTH,
+        BUT_MUTE_HEIGHT,
+        "",
+        _handle_button,
+        draw_volume_button
+    );
+    but.emit(sender, Message::VolumeCheck);
+    return but;
+}
+
 
 /// Builds a frame at the top with the given label
 fn _build_top_frame(label: &str) -> Frame {
-    let mut frame = _build_frame(TOP_FRAME_XPOS, TOP_FRAME_YPOS);
+    let mut frame = Frame::default()
+        .with_size(TOP_FRAME_WIDTH, TOP_FRAME_HEIGHT)
+        .with_pos(TOP_FRAME_XPOS, TOP_FRAME_YPOS);
     // frame.set_frame(FrameType::FlatBox);
     // frame.set_color(C_BLACK);
-    frame.set_align(Align::Top | Align::Inside);
+    frame.set_align(Align::Center | Align::Inside);
     frame.set_label(label);
     frame.set_label_color(C_DDLC_PINK_DARK);
-    // frame.set_label_type(LabelType::Normal);
     frame.set_label_size(TOP_FRAME_LABEL_SIZE);
 
     return frame;
 }
 
 
-fn _build_welcome_win_pack() -> Pack {
-    const TOTAL_ITEMS: i32 = 2;
-    const PAD_X: i32 = 50;
-    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
+/// Builds a frame in the middle of the screen
+fn _build_mid_frame(label: &str) -> Frame {
+    let mut frame = Frame::default()
+        .with_size(MID_FRAME_WIDTH, MID_FRAME_HEIGHT)
+        .with_pos(MID_FRAME_XPOS, MID_FRAME_YPOS);
+    // frame.set_frame(FrameType::FlatBox);
+    // frame.set_color(C_BLACK);
+    frame.set_align(Align::Center | Align::Inside);
+    frame.set_label(label);
+    frame.set_label_color(C_DDLC_PINK_DARK);
+    frame.set_label_size(MID_FRAME_LABEL_SIZE);
 
-    let mut pack = Pack::default()
-        .with_size(INNER_WIN_WIDTH-PAD_X*2, BUT_HEIGHT)
-        .with_pos(PAD_X, PAD_Y)
+    return frame;
+}
+
+
+fn _build_welcome_win_inner_pack() -> Pack {
+    let mut inner_pack = Pack::default()
+        .with_size(BUT_WIDTH + BUT_SPACING + BUT_MUTE_WIDTH, BUT_HEIGHT)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH*TOTAL_ITEMS - PAD_X*2);
+    inner_pack.set_spacing(BUT_SPACING);
+
+    inner_pack.end();
+
+    return inner_pack;
+}
+
+fn _build_welcome_win_outer_pack() -> Pack {
+    const WIDTH: i32 = INNER_WIN_WIDTH-INNER_WIN_CONTENT_XPADDING*2;
+
+    let mut pack = Pack::default()
+        .with_size(WIDTH, BUT_HEIGHT)
+        .with_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING)
+        .with_align(Align::Center)
+        .with_type(PackType::Horizontal);
+    pack.set_spacing(
+        WIDTH - (BUT_WIDTH + BUT_SPACING + BUT_MUTE_WIDTH) - BUT_WIDTH
+    );
 
     pack.end();
 
     return pack;
+}
+
+/// Builds a pack of buttons for the welcome window
+fn _build_welcome_win_pack(sender: Sender<Message>) -> Pack {
+    let outer_pack = _build_welcome_win_outer_pack();
+    outer_pack.begin();
+
+    let inner_pack = _build_welcome_win_inner_pack();
+    inner_pack.begin();
+
+    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
+    build_volume_but(sender);
+
+    inner_pack.end();
+
+    build_button(BUT_CONTINUE_LABEL, sender, Message::NextPage);
+
+    outer_pack.end();
+
+    return outer_pack;
 }
 
 /// Builds the welcome windows
@@ -320,15 +397,10 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
     welcome_win.show();
     welcome_win.begin();
 
-    _build_top_frame(WELCOME_FRAME_LABEL);
+    _build_top_frame(WELCOME_TOP_FRAME_LABEL);
+    _build_mid_frame(WELCOME_MID_FRAME_LABEL);
 
-    let welcome_but_pack = _build_welcome_win_pack();
-    welcome_but_pack.begin();
-
-    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
-    build_button(BUT_CONTINUE_LABEL, sender, Message::NextPage);
-
-    welcome_but_pack.end();
+    _build_welcome_win_pack(sender);
 
     welcome_win.end();
 
@@ -336,80 +408,174 @@ pub fn build_welcome_win(sender: Sender<Message>) -> DoubleWindow {
 }
 
 
-fn _build_ternary_inner_pack() -> Pack {
-    const TOTAL_ITEMS: i32 = 2;
-
-    let mut inner_pack = Pack::default()
-        .with_size(BUT_WIDTH*TOTAL_ITEMS + 5, BUT_HEIGHT)
+fn _build_4but_outer_pack() -> Pack {
+    let pack = Pack::default()
+        .with_size(INNER_WIN_WIDTH-INNER_WIN_CONTENT_XPADDING*2, BUT_HEIGHT)
+        .with_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING)
         .with_align(Align::Center)
         .with_type(PackType::Horizontal);
-    inner_pack.set_spacing(5);
-
-    inner_pack.end();
-
-    return inner_pack;
-}
-
-fn _build_ternary_outer_pack(spacing: i32) -> Pack {
-    const PAD_X: i32 = 50;
-    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
-
-    let mut pack = Pack::default()
-        .with_size(INNER_WIN_WIDTH-PAD_X*2, BUT_HEIGHT)
-        .with_pos(PAD_X, PAD_Y)
-        .with_align(Align::Center)
-        .with_type(PackType::Horizontal);
-    pack.set_spacing(INNER_WIN_WIDTH - BUT_WIDTH - spacing - PAD_X*2);
 
     pack.end();
 
     return pack;
 }
 
-/// Builds a pack of 3 buttons
-fn _build_ternary_but_pack(
-    sender: Sender<Message>,
-    but0_data: (&str, Message),
-    but1_data: (&str, Message),
-    but2_data: (&str, Message)
-) {
-    let inner_pack = _build_ternary_inner_pack();
-
-    inner_pack.begin();
-    build_button(but1_data.0, sender, but1_data.1);
-    build_button(but2_data.0, sender, but2_data.1);
-    inner_pack.end();
-
-    let mut outer_pack = _build_ternary_outer_pack(inner_pack.w());
-
-    outer_pack.begin();
-    build_button(but0_data.0, sender, but0_data.1);
-    outer_pack.add(&inner_pack);
-    outer_pack.end();
+fn _build_4but_left_inner_pack() -> Pack {
+    return _build_welcome_win_inner_pack();
 }
 
-/// Builds a pack of 3 buttons
-/// Example: <Abort>      <Back> <Continue>
+fn _build_4but_right_inner_pack() -> Pack {
+    let mut inner_pack = Pack::default()
+        .with_size(2*BUT_WIDTH + BUT_SPACING, BUT_HEIGHT)
+        .with_align(Align::Center)
+        .with_type(PackType::Horizontal);
+    inner_pack.set_spacing(BUT_SPACING);
+
+    inner_pack.end();
+
+    return inner_pack;
+}
+
+/// Builds a pack of 4 buttons
+fn _build_4but_pack(
+    sender: Sender<Message>,
+    but3_data: (&str, Message)
+) -> Pack {
+    let mut outer_pack = _build_4but_outer_pack();
+    outer_pack.begin();
+
+    let left_inner_pack = _build_4but_left_inner_pack();
+    left_inner_pack.begin();
+
+    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
+    build_volume_but(sender);
+
+    left_inner_pack.end();
+
+    let right_inner_pack = _build_4but_right_inner_pack();
+    right_inner_pack.begin();
+
+    build_button(BUT_BACK_LABEL, sender, Message::PrevPage);
+    build_button(but3_data.0, sender, but3_data.1);
+
+    right_inner_pack.end();
+
+    outer_pack.set_spacing(
+        outer_pack.width() - left_inner_pack.width() - right_inner_pack.width()
+    );
+    outer_pack.end();
+
+    return outer_pack;
+}
+
+/// Builds a pack of 4 buttons
+/// Example: <Abort> <Volume>      <Back> <Continue>
 fn _build_abort_back_contn_pack(sender: Sender<Message>) {
-    _build_ternary_but_pack(
+    _build_4but_pack(
         sender,
-        (BUT_ABORT_LABEL, Message::Abort),
-        (BUT_BACK_LABEL, Message::PrevPage),
         (BUT_CONTINUE_LABEL, Message::NextPage)
     );
 }
 
-/// Builds a pack of 3 buttons
-/// Example: <Abort>      <Back> <Install>
+/// Builds a pack of 4 buttons
+/// Example: <Abort> <Volume>      <Back> <Install>
 fn _build_abort_back_inst_pack(sender: Sender<Message>) {
-    _build_ternary_but_pack(
+    _build_4but_pack(
         sender,
-        (BUT_ABORT_LABEL, Message::Abort),
-        (BUT_BACK_LABEL, Message::PrevPage),
         (BUT_INSTALL_LABEL, Message::Install)
     );
 }
 
+
+// Builds a slider for license text display
+fn build_license_txt_slider(mut txt_disp: TextDisplay, max_value: f64) -> Slider {
+    let mut slider = Slider::default()
+        .with_size(LICENSE_SLIDER_WIDTH, LICENSE_SLIDER_HEIGHT)
+        .right_of(&txt_disp, 0);
+
+    slider.set_minimum(0.0);
+    if max_value < 1.0 {
+        slider.set_maximum(1.0);
+        slider.deactivate();
+    }
+    else {
+        slider.set_maximum(max_value);
+    }
+    slider.set_step(1.0, 1);
+    slider.set_slider_size(LICENSE_SLIDER_SIZE);
+    slider.draw(
+        {
+            let mut bar_img = image::PngImage::from_data(static_data::VERTICAL_BAR_DATA).unwrap();
+            let mut thumb_img = image::PngImage::from_data(static_data::VERTICAL_THUMB_DATA).unwrap();
+
+            move |s| {
+                let (x, y, w, h) = (s.x(), s.y(), s.w(), s.h());
+
+                draw::draw_rect_fill(x, y, w, h, C_DDLC_WHITE_IDLE);
+
+                bar_img.draw(x, y, w, h);
+
+                let thumb_h = (LICENSE_SLIDER_HEIGHT as f32 * s.slider_size()) as f64;
+                let thumb_ypos = (
+                    TXT_DISP_YPOS as f64 + ((LICENSE_SLIDER_HEIGHT as f64 - thumb_h) * (s.value() / s.maximum()))
+                ) as i32;
+                thumb_img.draw(x, thumb_ypos, w, h);
+            }
+        }
+    );
+
+    slider.set_callback(
+        move |s| {
+            txt_disp.scroll(s.value() as i32, 0);
+        }
+    );
+
+    return slider;
+
+}
+
+// Sets a hander for license text display
+fn set_license_txt_handler(txt_disp: &mut TextDisplay, slider: Slider) {
+    txt_disp.handle(
+        {
+            let mut slider = slider.clone();
+
+            move |_, ev| -> bool {
+                let mut current_value = slider.value();
+                match ev {
+                    Event::MouseWheel => {
+                        match event_dy() {
+                            MouseWheel::Up => {
+                                current_value = f64::min(slider.maximum(), current_value+SCROLL_AMOUNT)
+                            },
+                            MouseWheel::Down => {
+                                current_value = f64::max(0.0, current_value-SCROLL_AMOUNT);
+                            },
+                            _ => return false
+                        }
+                        slider.set_value(current_value);
+                        return true
+                    },
+                    _ => return false
+                }
+            }
+        }
+    );
+}
+
+// Builds license text display
+// NOTE: the text display will need a handler
+fn build_license_txt(buf: TextBuffer) -> TextDisplay {
+    let mut txt_disp = TextDisplay::default()
+        .with_size(TXT_DISP_WIDTH, TXT_DISP_HEIGHT)
+        .with_pos(TXT_DISP_XPOS, TXT_DISP_YPOS);
+        txt_disp.wrap_mode(WrapMode::AtBounds, 0);
+        txt_disp.set_selection_color(C_DDLC_PINK_DARK);
+        txt_disp.set_scrollbar_size(-1);
+        txt_disp.set_buffer(buf);
+
+    return txt_disp;
+}
 
 /// Builds the license window
 pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
@@ -420,12 +586,21 @@ pub fn build_license_win(sender: Sender<Message>) -> DoubleWindow {
     _build_top_frame(LICENSE_FRAME_LABEL);
 
     let mut buf = TextBuffer::default();
-    buf.set_text(APP_LICENSE);
+    buf.set_text(static_data::APP_LICENSE);
+    let mut total_chars = buf.length();
+    if total_chars > LICENSE_SLIDER_LINES_IGNORE {
+        total_chars -= LICENSE_SLIDER_LINES_IGNORE;
+    }
 
-    let mut txt = TextDisplay::default()
-        .with_size(INNER_WIN_WIDTH, 310)
-        .with_pos(0, 100);
-    txt.set_buffer(buf);
+    let mut txt_disp = build_license_txt(buf);
+
+    let total_lines = txt_disp.count_lines(
+        0, total_chars, true
+    ) as f64;
+
+    let slider = build_license_txt_slider(txt_disp.clone(), total_lines);
+
+    set_license_txt_handler(&mut txt_disp, slider.clone());
 
     _build_abort_back_contn_pack(sender);
 
@@ -444,22 +619,18 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
 
     _build_top_frame(SELECT_DIR_FRAME_LABEL);
 
-    let mut pack = Pack::default()
-        .with_size(INNER_WIN_WIDTH, SEL_DIR_TXT_HEIGHT)
-        .with_align(Align::Center)
-        .with_type(PackType::Horizontal);
-    pack = pack.center_of_parent();
-    pack.begin();
-
     let mut txt = TextDisplay::default()
-        .with_size(INNER_WIN_WIDTH-BUT_SEL_DIR_WIDTH, SEL_DIR_TXT_HEIGHT);
+        .with_size(SEL_DIR_TXT_WIDTH, SEL_DIR_TXT_HEIGHT)
+        .with_pos(SEL_DIR_TXT_XPOS, SEL_DIR_TXT_YPOS);
     txt.set_text_size(SEL_DIR_TXT_SIZE);
     txt.wrap_mode(WrapMode::None, 0);
+    txt.set_frame(FrameType::EngravedFrame);
+    txt.set_selection_color(C_DDLC_PINK_DARK);
+    txt.set_scrollbar_size(-1);
     txt.set_buffer(txt_buf);
 
-    build_sel_dir_button(BUT_SELECT_DIR_LABEL, sender, Message::SelectDir);
-
-    pack.end();
+    let mut but = build_button(BUT_SELECT_DIR_LABEL, sender, Message::SelectDir);
+    but.set_pos(INNER_WIN_CONTENT_XPADDING+SEL_DIR_TXT_WIDTH-BUT_WIDTH, SEL_DIR_TXT_YPOS+SEL_DIR_TXT_HEIGHT+BUT_SPACING/2);
 
     _build_abort_back_contn_pack(sender);
 
@@ -471,7 +642,7 @@ pub fn build_select_dir_win(sender: Sender<Message>, txt_buf: TextBuffer) -> Dou
 
 
 /// Builds the options window with various settings for installer
-pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> DoubleWindow {
+pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool, install_spr: bool) -> DoubleWindow {
     let options_win = build_inner_win();
     options_win.begin();
 
@@ -479,20 +650,29 @@ pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> Doubl
     _build_top_frame(OPTIONS_FRAME_LABEL);
 
 
-    const BUT_USE_DLX_VERSION_WIDTH: i32 = BUT_WIDTH+225;
-    const TOTAL_BUTS: i32 = 1;
-    const XPOS: i32 = INNER_WIN_WIDTH/2 - BUT_USE_DLX_VERSION_WIDTH/2;
-    const YPOS: i32 = INNER_WIN_HEIGHT/2 - TOTAL_BUTS*BUT_HEIGHT/2;
+    const TOTAL_BUTS: i32 = 2;
+    const XPOS: i32 = INNER_WIN_CONTENT_XPADDING;
+    const YPOS: i32 = INNER_WIN_HEIGHT/2 - TOTAL_BUTS*BUT_HEIGHT/2 - (TOTAL_BUTS-1)*BUT_SPACING/2;
+    const YPOS_INC: i32 = BUT_HEIGHT + BUT_SPACING;
 
     let mut but_inst_dlx = _build_check_button(
-        BUT_USE_DLX_VERSION_WIDTH,
-        BUT_HEIGHT,
-        BUT_USE_DLX_VERSION_LABEL,
+        BUT_DLX_VER_CHECK_WIDTH,
+        BUT_DLX_VER_CHECK_HEIGHT,
+        BUT_DLX_VER_CHECK_LABEL,
         sender,
-        Message::DlxVersionCheck
+        Message::DlxVersionCheck,
+        is_dlx_version
     );
-    but_inst_dlx.set_checked(is_dlx_version);
     but_inst_dlx.set_pos(XPOS, YPOS);
+    let mut but_inst_spr = _build_check_button(
+        BUT_INSTALL_SPR_CHECK_WIDTH,
+        BUT_INSTALL_SPR_CHECK_HEIGHT,
+        BUT_INSTALL_SPR_CHECK_LABEL,
+        sender,
+        Message::InstallSprCheck,
+        install_spr
+    );
+    but_inst_spr.set_pos(XPOS, YPOS+YPOS_INC);
 
 
     _build_abort_back_inst_pack(sender);
@@ -508,7 +688,7 @@ pub fn build_options_win(sender: Sender<Message>, is_dlx_version: bool) -> Doubl
 pub fn build_progress_bar() -> Progress {
     let mut bar = Progress::default()
         .with_size(PB_WIDTH, PB_HEIGHT)
-        .with_pos(0, WIN_HEIGHT/2-PB_HEIGHT/2);
+        .with_pos(INNER_WIN_CONTENT_XPADDING, WIN_HEIGHT/2-PB_HEIGHT/2);
     bar.set_minimum(0.0);
     bar.set_maximum(1.0);
     bar.set_label_font(BUT_FONT);
@@ -526,10 +706,14 @@ pub fn build_propgress_win(sender: Sender<Message>, bar: &Progress) -> DoubleWin
 
     _build_top_frame(PROGRESS_FRAME_LABEL);
 
-    const PAD_X: i32 = 50;
-    const PAD_Y: i32 = INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING;
-    let mut abrt_but = build_button(BUT_ABORT_LABEL, sender, Message::Abort);
-    abrt_but.set_pos(PAD_X, PAD_Y);
+    let mut pack = _build_4but_left_inner_pack();
+    pack.set_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
+    pack.begin();
+
+    build_button(BUT_ABORT_LABEL, sender, Message::Abort);
+    build_volume_but(sender);
+
+    pack.end();
 
     progress_win.add(bar);
 
@@ -666,7 +850,7 @@ pub fn build_msg_win(msg: &str) -> DoubleWindow {
 
 fn _build_exit_button(sender: Sender<Message>) -> Button {
     let mut but = build_button(BUT_EXIT_LABEL, sender, Message::Close);
-    but.set_pos(INNER_WIN_WIDTH-BUT_WIDTH-50, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
+    but.set_pos(INNER_WIN_WIDTH-BUT_WIDTH-INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
 
     return but;
 }
@@ -676,7 +860,8 @@ pub fn build_abort_win(sender: Sender<Message>) -> DoubleWindow {
     let abort_win = build_inner_win();
     abort_win.begin();
 
-    _build_top_frame(ABORT_FRAME_LABEL);
+    _build_top_frame(ABORT_TOP_FRAME_LABEL);
+    _build_mid_frame(ABORT_MID_FRAME_LABEL);
 
     _build_exit_button(sender);
 
@@ -690,7 +875,8 @@ pub fn build_done_win(sender: Sender<Message>) -> DoubleWindow {
     let done_win = build_inner_win();
     done_win.begin();
 
-    _build_top_frame(DONE_FRAME_LABEL);
+    _build_top_frame(DONE_TOP_FRAME_LABEL);
+    _build_mid_frame(DONE_MID_FRAME_LABEL);
 
     _build_exit_button(sender);
 
