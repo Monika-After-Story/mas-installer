@@ -1,3 +1,5 @@
+/// The module with styles for our app
+
 use std::sync::Mutex;
 
 use fltk::{

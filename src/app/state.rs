@@ -1,9 +1,15 @@
-#![allow(dead_code)]
 /// The module that implements AppState
 
 use std::{
-    path::PathBuf
+    path::PathBuf,
+    sync::{
+        Arc,
+        Mutex
+    },
 };
+
+
+pub type ThreadSafeState = Arc<Mutex<AppState>>;
 
 
 /// Struct representing app state
@@ -25,8 +31,8 @@ impl AppState {
     }
 
     /// Returns the abort flag
-    pub fn get_abort_flag(&self) -> &bool {
-        return &self.abort_flag;
+    pub fn get_abort_flag(&self) -> bool {
+        return self.abort_flag;
     }
 
     /// Sets the abort flag
@@ -35,13 +41,19 @@ impl AppState {
     }
 
     /// Returns the dlx version flag
-    pub fn get_deluxe_ver_flag(&self) -> &bool {
-        return &self.deluxe_ver_flag;
+    pub fn get_deluxe_ver_flag(&self) -> bool {
+        return self.deluxe_ver_flag;
     }
 
     /// Sets the dlx version flag
+    #[allow(dead_code)]
     pub fn set_deluxe_ver_flag(&mut self, value: bool) {
         self.deluxe_ver_flag = value;
+    }
+
+    /// Inverts the dlx version flag
+    pub fn invert_deluxe_ver_flag(&mut self) {
+        self.deluxe_ver_flag = !self.deluxe_ver_flag;
     }
 
     /// Returns the extraction directory
@@ -63,9 +75,15 @@ impl AppState {
 impl Default for AppState {
     fn default() -> Self {
         return Self::new(
-            true,
             false,
+            true,
             crate::utils::get_cwd()
         );
     }
+}
+
+
+/// Builds an AppState and wraps it into a Mutex inside an Arc
+pub fn build_thread_safe_state() -> ThreadSafeState {
+    return Arc::new(Mutex::new(AppState::default()));
 }

@@ -1,3 +1,5 @@
+/// The module with static data of our app
+
 // Include the icon
 pub static APP_ICON_DATA: &'static [u8] = include_bytes!("static/icon.png");
 
@@ -14,5 +16,5 @@ pub static VOLUME_BUT_DATA: &'static [u8] = include_bytes!("static/but_volume.pn
 pub static VOLUME_BUT_HOVER_DATA: &'static [u8] = include_bytes!("static/but_volume_hover.png");
 
 // Sounds
-// Credits: Ludum Dare 28 - Track 1 by @ben_burnes http://abstractionmusic.bandcamp.com/
-pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/ludum_dare_28_track_1.ogg");
+// Credits: Ludum Dare 28 - Tracks 1 and 3 by @ben_burnes http://abstractionmusic.bandcamp.com/
+pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/ludum_dare_28_track_3.ogg");

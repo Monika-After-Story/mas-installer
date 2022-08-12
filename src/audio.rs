@@ -1,3 +1,5 @@
+/// The module that implements audio support for our app
+
 use std::{
     io::Cursor
 };

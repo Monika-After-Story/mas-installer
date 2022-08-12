@@ -1,7 +1,4 @@
-use std::sync::{
-    Arc,
-    atomic::AtomicBool
-};
+/// Module with functions to build fltk widgets
 
 use fltk::{
     app::{
@@ -53,14 +50,15 @@ use fltk::{
 };
 
 use crate::{
+    app::state::ThreadSafeState,
     styles::*,
-    utils::{get_flag, load_icon},
+    utils::load_icon,
     Message,
     static_data
 };
 
 
-/// Builds a default app
+/// Builds a default fltk app
 pub fn build_app() -> App {
     return App::default();
 }
@@ -69,7 +67,7 @@ pub fn build_app() -> App {
 /// Builds an outer window
 /// This is the main window of the app
 /// Other windows get included into this
-pub fn build_outer_win(sender: Sender<Message>, abort_flag: &Arc<AtomicBool>) -> DoubleWindow {
+pub fn build_outer_win(sender: Sender<Message>, app_state: &ThreadSafeState) -> DoubleWindow {
     let mut main_win = Window::default()
         .with_size(WIN_WIDTH, WIN_HEIGHT)
         .with_label(&format!("{} - {}", WIN_TITLE, crate::VERSION.unwrap_or(crate::DEF_VERSION)))
@@ -80,10 +78,11 @@ pub fn build_outer_win(sender: Sender<Message>, abort_flag: &Arc<AtomicBool>) ->
     // when the user clicks X
     main_win.set_callback(
         {
-            let abort_flag = abort_flag.clone();
+            let app_state = app_state.clone();
             move |_| {
                 if get_last_event() == Event::Close {
-                    match get_flag(&abort_flag) {
+                    let abort_flag = app_state.lock().unwrap().get_abort_flag();
+                    match abort_flag {
                         false => sender.send(Message::Abort),
                         true => sender.send(Message::Close)
                     };

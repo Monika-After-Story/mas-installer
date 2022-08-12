@@ -7,10 +7,6 @@ use std::{
     io,
     cmp::{min},
     thread,
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering}
-    },
     time::Duration
 };
 
@@ -41,6 +37,7 @@ use reqwest::{
 use zip::ZipArchive;
 
 use crate::{
+    app::state::ThreadSafeState,
     errors::{
         InstallerError,
         DownloadError,
@@ -53,49 +50,6 @@ use crate::{
 
 
 const PAUSE_DURATION: Duration = Duration::from_millis(250);
-
-
-/// Changes current active windows by hiding one window and showing another
-pub fn switch_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize, new_id: usize) {
-    let cur_id = *current_id;
-    // Sanity check
-    if cur_id >= windows.len() || new_id >= windows.len() {
-        return;
-    }
-    windows[cur_id].hide();
-    windows[new_id].show();
-    *current_id = new_id;
-}
-
-pub fn hide_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
-    if current_id >= windows.len() {
-        return;
-    }
-    windows[current_id].hide();
-}
-
-// #[allow(dead_code)]
-// pub fn show_current_win(windows: &mut Vec<DoubleWindow>, current_id: usize) {
-//     if current_id >= windows.len() {
-//         return;
-//     }
-//     windows[current_id].show();
-// }
-
-/// Hides current and shows next (current id + 1) window
-pub fn show_next_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize) {
-    switch_win(windows, current_id, *current_id+1);
-}
-
-/// Hides current and shows previous (current id - 1) window
-pub fn show_previous_win(windows: &mut Vec<DoubleWindow>, current_id: &mut usize) {
-    let cur_id = *current_id;
-    // Just so we don't get overflow
-    if cur_id == 0 {
-        return;
-    }
-    switch_win(windows, current_id, cur_id-1);
-}
 
 
 /// Loads icon data and sets it as window icon
@@ -225,19 +179,6 @@ pub fn run_msg_dlg(msg: &str) {
 }
 
 
-/// Checks atomic bool within an arc and returns its value
-/// NOTE: USES Ordering::Relaxed
-pub fn get_flag(flag: &Arc<AtomicBool>) -> bool {
-    return flag.load(Ordering::Relaxed);
-}
-
-/// Sets atomic bool within an arc and returns its value
-/// NOTE: USES Ordering::Relaxed
-pub fn set_flag(flag: &Arc<AtomicBool>, value: bool) {
-    flag.store(value, Ordering::Relaxed);
-}
-
-
 fn sleep() {
     thread::sleep(PAUSE_DURATION);
 }
@@ -291,13 +232,13 @@ fn _get_assets_links(client: &req_blocking::Client) -> Result<(String, String), 
 fn _download_to_file(
     client: &req_blocking::Client,
     sender: Sender<Message>,
-    abort_flag: &Arc<AtomicBool>,
+    app_state: &ThreadSafeState,
     download_link: &str,
     file: &mut File
 ) -> Result<(), DownloadError> {
     const DEF_CHUNK_SIZE: u128 = 1024*1024*8 + 1;
 
-    if get_flag(abort_flag) {
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
 
@@ -350,7 +291,7 @@ fn _download_to_file(
         // Slep to let the server rest
         sleep();
         // See if we want to abort
-        if get_flag(abort_flag) {
+        if app_state.lock().unwrap().get_abort_flag() {
             return Ok(());
         }
     }
@@ -363,11 +304,10 @@ fn _download_to_file(
 /// Extracts a zip archive
 fn _extract_archive(
     sender: Sender<Message>,
-    abort_flag: &Arc<AtomicBool>,
-    archive: &File,
-    destination_dir: &PathBuf
+    app_state: &ThreadSafeState,
+    archive: &File
 ) -> Result<(), ExtractionError> {
-    if get_flag(abort_flag) {
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
 
@@ -382,7 +322,7 @@ fn _extract_archive(
         let file_path = file.enclosed_name()
             .ok_or(ExtractionError::UnsafeFilepath(file.name().to_string()))?;
 
-        let extraction_path = destination_dir.join(file_path);
+        let extraction_path = app_state.lock().unwrap().get_extraction_dir().join(file_path);
 
         // Extract the dir
         if file.is_dir() {
@@ -406,7 +346,7 @@ fn _extract_archive(
         sender.send(Message::UpdateProgressBar(pb_val));
 
         // See if we want to abort
-        if get_flag(abort_flag) {
+        if app_state.lock().unwrap().get_abort_flag() {
             return Ok(());
         }
     }
@@ -433,15 +373,13 @@ fn _create_temp_file(temp_dir: &tempfile::TempDir) -> Result<File, io::Error> {
 
 /// Main method to handle game installation process, downloads it into a temp folder and then extracts
 pub fn install_game(
-    destination_dir: &PathBuf,
     sender: Sender<Message>,
-    abort_flag: &Arc<AtomicBool>,
-    is_deluxe: bool
+    app_state: &ThreadSafeState
 ) -> InstallResult {
     sender.send(Message::Preparing);
     sender.send(Message::UpdateProgressBar(0.0));
 
-    if get_flag(abort_flag) {
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
 
@@ -449,7 +387,7 @@ pub fn install_game(
 
     // Get download link
     let (def, dlx) = _get_assets_links(&client)?;
-    let download_link = match is_deluxe {
+    let download_link = match app_state.lock().unwrap().get_deluxe_ver_flag() {
         true => dlx,
         false => def
     };
@@ -469,11 +407,11 @@ pub fn install_game(
     _download_to_file(
         &client,
         sender,
-        abort_flag,
+        app_state,
         &download_link,
         &mut temp_file
     )?;
-    if get_flag(abort_flag) {
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
     sleep();
@@ -481,11 +419,10 @@ pub fn install_game(
     sender.send(Message::Extracting);
     _extract_archive(
         sender,
-        abort_flag,
-        &temp_file,
-        destination_dir
+        app_state,
+        &temp_file
     )?;
-    if get_flag(abort_flag) {
+    if app_state.lock().unwrap().get_abort_flag() {
         return Ok(());
     }
     sleep();
@@ -504,19 +441,15 @@ pub fn install_game(
 
 /// Threaded version of install_game
 pub fn install_game_in_thread(
-    destination_dir: &PathBuf,
     sender: Sender<Message>,
-    abort_flag: &Arc<AtomicBool>,
-    is_deluxe: bool
+    app_state: &ThreadSafeState
 ) -> thread::JoinHandle<InstallResult> {
 
-    let destination_dir = destination_dir.clone();
-    // let sender = sender.clone();
-    let abort_flag = abort_flag.clone();
+    let app_state = app_state.clone();
 
     return thread::spawn(
         move || -> InstallResult {
-            return match install_game(&destination_dir, sender, &abort_flag, is_deluxe) {
+            return match install_game(sender, &app_state) {
                 Err(e) => {
                     sender.send(Message::Error);
                     Err(e)
