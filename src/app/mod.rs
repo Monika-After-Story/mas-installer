@@ -1,6 +1,7 @@
 /// The module that implements our app
 
 pub mod builder;
+pub mod dialog;
 pub mod state;
 pub mod styles;
 
@@ -24,13 +25,37 @@ use fltk::{
 };
 
 use state::{ThreadSafeState, build_thread_safe_state};
-use crate::{Message, InstallResult};
 use super::{audio, errors, installer, utils};
-use errors::InstallerError;
+use errors::InstallError;
+
+
+/// The message enum so different parts of the app can communicate
+#[derive(Clone, Copy)]
+pub enum Message {
+    UpdateProgressBar(f64),
+    Close,
+    NextPage,
+    PrevPage,
+    SelectDir,
+    DlxVersionCheck,
+    InstallSprCheck,
+    VolumeCheck,
+    Install,
+    Preparing,
+    Downloading,
+    Extracting,
+    DownloadingSpr,
+    ExtractingSpr,
+    CleaningUp,
+    Error,
+    Abort,
+    Done
+}
 
 
 /// A struct representing our app
 pub struct InstallerApp {
+    // fltk manages GUI
     inner: fltkApp,
     // The app state
     state: ThreadSafeState,
@@ -54,7 +79,7 @@ pub struct InstallerApp {
     audio_manager: Option<audio::AudioManager>,
 
     // Handle to the installer thread, option because we might not start it/close early
-    installer_th_handle: Option<thread::JoinHandle<InstallResult>>,
+    installer_th_handle: Option<thread::JoinHandle<installer::InstallResult>>,
 
     // These need to be updated
     path_txt_buf: TextBuffer,
@@ -144,9 +169,9 @@ impl InstallerApp {
                         self.show_previous_window();
                     },
                     Message::SelectDir => {
-                        let selected_dir = utils::run_select_dir_dlg(styles::SEL_DIR_DLG_PROMPT);
+                        let selected_dir = dialog::run_select_dir_dlg(styles::SEL_DIR_DLG_PROMPT);
                         if !utils::is_valid_ddlc_dir(&selected_dir) {
-                            utils::run_msg_dlg("Attention!\nSelected directory doesn't appear to be\na valid DDLC directory");
+                            dialog::run_msg_dlg("Attention!\nSelected directory doesn't appear to be\na valid DDLC directory");
                         }
                         self.set_extraction_dir(selected_dir);
                     },
@@ -182,7 +207,7 @@ impl InstallerApp {
                         let app_state = self.state.lock().unwrap();
                         // We warn the user again if the extraction dir looks wrong
                         if !utils::is_valid_ddlc_dir(app_state.get_extraction_dir()) {
-                            utils::run_msg_dlg("Attention!\nInstalling into a non-DDLC directory");
+                            dialog::run_msg_dlg("Attention!\nInstalling into a non-DDLC directory");
                         }
                         // We also need to move to the next window
                         self.sender.send(Message::NextPage);
@@ -225,7 +250,7 @@ impl InstallerApp {
                         let rv = self.cleanup_th_handle();
                         // Show the error if we can
                         if let Some(e) = rv {
-                            utils::run_alert_dlg(&format!("{e}"));
+                            dialog::run_alert_dlg(&format!("{e}"));
                         }
                         // Let's just quit
                         self.sender.send(Message::Close);
@@ -286,7 +311,8 @@ impl InstallerApp {
     }
 
     /// Joins the installer thread handle
-    fn cleanup_th_handle(&mut self) -> Option<InstallerError> {
+    /// Returns an optional error if the install thread failed
+    fn cleanup_th_handle(&mut self) -> Option<InstallError> {
         // I couldn't find a way to join a thread behind a "mut self reference"
         // This *should* work, but it doesn't:
         //      self.installer_th_handle.unwrap().join();

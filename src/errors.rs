@@ -124,7 +124,7 @@ impl fmt::Display for ExtractionError {
 /// The "main" error type that can occur,
 /// represents an error occured during installation
 #[derive(Debug)]
-pub enum InstallerError {
+pub enum InstallError {
     /// Error occured during downloading
     DownloadError(DownloadError),
     /// JSON is corrupted
@@ -139,33 +139,33 @@ pub enum InstallerError {
     ExtractionError(ExtractionError)
 }
 
-impl From<SerdeError> for InstallerError {
+impl From<SerdeError> for InstallError {
     fn from(err: SerdeError) -> Self {
         return Self::InvalidJson(err);
     }
 }
-impl From<ReqError> for InstallerError {
+impl From<ReqError> for InstallError {
     fn from(err: ReqError) -> Self {
         return Self::RequestError(err);
     }
 }
-impl From<IOError> for InstallerError {
+impl From<IOError> for InstallError {
     fn from(err: IOError) -> Self {
         return Self::IOError(err);
     }
 }
-impl From<DownloadError> for InstallerError {
+impl From<DownloadError> for InstallError {
     fn from(err: DownloadError) -> Self {
         return Self::DownloadError(err);
     }
 }
-impl From<ExtractionError> for InstallerError{
+impl From<ExtractionError> for InstallError{
     fn from(err: ExtractionError) -> Self {
         return Self::ExtractionError(err);
     }
 }
 
-impl StdError for InstallerError {
+impl StdError for InstallError {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         return match self {
             Self::DownloadError(og_err) => Some(og_err),
@@ -178,7 +178,7 @@ impl StdError for InstallerError {
     }
 }
 
-impl fmt::Display for InstallerError {
+impl fmt::Display for InstallError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         return match self {
             Self::DownloadError(err) => {

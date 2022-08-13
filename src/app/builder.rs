@@ -2,7 +2,7 @@
 
 use fltk::{
     app::{
-        App,
+        App as FLTKApp,
         Sender,
         screen_size,
         event_dy,
@@ -49,19 +49,21 @@ use fltk::{
     }
 };
 
-use crate::{
-    utils::load_icon,
-    Message,
-    static_data
-};
-use super::{styles::*, state::ThreadSafeState};
+use crate::static_data;
+use super::{styles::*, state::ThreadSafeState, Message};
 
 
 /// Builds a default fltk app
-pub fn build_app() -> App {
-    return App::default();
+pub fn build_app() -> FLTKApp {
+    return FLTKApp::default();
 }
 
+
+/// Loads icon data and sets it as window icon
+fn load_icon(win: &mut DoubleWindow) {
+    let icon = image::PngImage::from_data(&static_data::APP_ICON_DATA);
+    win.set_icon(icon.ok());
+}
 
 /// Builds an outer window
 /// This is the main window of the app

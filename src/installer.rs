@@ -21,20 +21,22 @@ use reqwest::{
 use zip::ZipArchive;
 
 use crate::{
-    app::state::ThreadSafeState,
+    app::{
+        state::ThreadSafeState,
+        Message
+    },
     errors::{
-        InstallerError,
+        InstallError,
         DownloadError,
         ExtractionError
-    },
-    Message
+    }
 };
 
 
 const PAUSE_DURATION: Duration = Duration::from_millis(200);
 
 
-type InstallResult = Result<(), InstallerError>;
+pub type InstallResult = Result<(), InstallError>;
 
 /// Struct representing release data we may need
 /// (like download links)
@@ -52,7 +54,7 @@ fn sleep() {
 
 
 /// Builds a client for this installer to access GitHub API
-pub fn build_client() -> Result<req_blocking::Client, InstallerError> {
+pub fn build_client() -> Result<req_blocking::Client, InstallError> {
     use headers::HeaderValue;
 
     let mut headers = headers::HeaderMap::new();
@@ -69,7 +71,7 @@ pub fn build_client() -> Result<req_blocking::Client, InstallerError> {
 
 
 /// Requests release data from github
-fn get_release_data(client: &req_blocking::Client) -> Result<ReleaseData, InstallerError> {
+fn get_release_data(client: &req_blocking::Client) -> Result<ReleaseData, InstallError> {
     const DL_URL_KEY: &str = "browser_download_url";
 
     let data = client.get(
@@ -81,19 +83,19 @@ fn get_release_data(client: &req_blocking::Client) -> Result<ReleaseData, Instal
     ).send()?.bytes()?;
 
     let json_data: serde_json::Value = serde_json::from_slice(&data)?;
-    let assets_list = json_data.get("assets").ok_or(InstallerError::CorruptedJSON("missing the assets field"))?;
+    let assets_list = json_data.get("assets").ok_or(InstallError::CorruptedJSON("missing the assets field"))?;
 
-    let def_dl_link = assets_list.get(crate::DEF_VERSION_ASSET_ID).ok_or(InstallerError::CorruptedJSON("missing the def version asset"))?
-        .get(DL_URL_KEY).ok_or(InstallerError::CorruptedJSON("missing the def version download link field"))?
-        .as_str().ok_or(InstallerError::CorruptedJSON("couldn't parse link to a str"))?
+    let def_dl_link = assets_list.get(crate::DEF_VERSION_ASSET_ID).ok_or(InstallError::CorruptedJSON("missing the def version asset"))?
+        .get(DL_URL_KEY).ok_or(InstallError::CorruptedJSON("missing the def version download link field"))?
+        .as_str().ok_or(InstallError::CorruptedJSON("couldn't parse link to a str"))?
         .to_owned();
-    let dlx_dl_link = assets_list.get(crate::DLX_VERSION_ASSET_ID).ok_or(InstallerError::CorruptedJSON("missing the deluxe version asset"))?
-        .get(DL_URL_KEY).ok_or(InstallerError::CorruptedJSON("missing the dlx version download link field"))?
-        .as_str().ok_or(InstallerError::CorruptedJSON("couldn't parse link to a str"))?
+    let dlx_dl_link = assets_list.get(crate::DLX_VERSION_ASSET_ID).ok_or(InstallError::CorruptedJSON("missing the deluxe version asset"))?
+        .get(DL_URL_KEY).ok_or(InstallError::CorruptedJSON("missing the dlx version download link field"))?
+        .as_str().ok_or(InstallError::CorruptedJSON("couldn't parse link to a str"))?
         .to_owned();
-    let spr_dl_link = assets_list.get(crate::SPR_ASSET_ID).ok_or(InstallerError::CorruptedJSON("missing spritepack asset"))?
-        .get(DL_URL_KEY).ok_or(InstallerError::CorruptedJSON("missing the spritepacks download link field"))?
-        .as_str().ok_or(InstallerError::CorruptedJSON("couldn't parse link to a str"))?
+    let spr_dl_link = assets_list.get(crate::SPR_ASSET_ID).ok_or(InstallError::CorruptedJSON("missing spritepack asset"))?
+        .get(DL_URL_KEY).ok_or(InstallError::CorruptedJSON("missing the spritepacks download link field"))?
+        .as_str().ok_or(InstallError::CorruptedJSON("couldn't parse link to a str"))?
         .to_owned();
 
     let data = ReleaseData {

@@ -7,33 +7,10 @@ use std::{
 };
 
 use fltk::{
-    image,
-    app::{
-        add_handler,
-        wait
-    },
-    dialog::{
-        NativeFileChooser,
-        NativeFileChooserType
-    },
-    enums::Event,
-    window::DoubleWindow,
-    prelude::{
-        WidgetExt,
-        WindowExt
-    },
+    app::add_handler,
+    enums::Event
 };
 
-
-
-use crate::static_data;
-
-
-/// Loads icon data and sets it as window icon
-pub fn load_icon(win: &mut DoubleWindow) {
-    let icon = image::PngImage::from_data(&static_data::APP_ICON_DATA);
-    win.set_icon(icon.ok());
-}
 
 /// Disables global hotkeys by consuming all shortcut events
 pub fn disable_global_hotkeys() {
@@ -108,49 +85,4 @@ pub fn is_valid_ddlc_dir(path: &PathBuf) -> bool {
     }
 
     return flag == REQUIRED_FLAG;
-}
-
-
-/// Launches select directory dialogue native to the target OS
-/// returns selected directory, defaults to current working directory
-pub fn run_select_dir_dlg(prompt: &str) -> PathBuf {
-    let mut c = NativeFileChooser::new(NativeFileChooserType::BrowseDir);
-
-    c.set_title(prompt);
-
-    let cwd = get_cwd();
-    match c.set_directory(&cwd) {
-        Err(err) => eprintln!("Failed to automatically set default dir: {err}"),
-        Ok(_) => {}
-    };
-
-    c.show();
-
-    return c.filename();
-}
-
-/// Launches alert dialogue
-/// NOTE: modal
-pub fn run_alert_dlg(msg: &str) {
-    let mut win = crate::app::builder::build_alert_win(
-        msg
-    );
-    win.show();
-    while win.shown() {
-        wait();
-    }
-    drop(win);
-}
-
-/// Launches message dialogue
-/// NOTE: modal
-pub fn run_msg_dlg(msg: &str) {
-    let mut win = crate::app::builder::build_msg_win(
-        msg
-    );
-    win.show();
-    while win.shown() {
-        wait();
-    }
-    drop(win);
 }

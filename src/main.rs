@@ -9,9 +9,6 @@ mod static_data;
 mod utils;
 
 
-use errors::InstallerError;
-
-
 // Get version from the cargo
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 const DEF_VERSION: &str = "unknown build";
@@ -24,31 +21,6 @@ const REPO_NAME: &str = "MonikaModDev";
 const DEF_VERSION_ASSET_ID: usize = 1;
 const DLX_VERSION_ASSET_ID: usize = 0;
 const SPR_ASSET_ID: usize = 3;
-
-
-#[derive(Clone, Copy)]
-pub enum Message {
-    UpdateProgressBar(f64),
-    Close,
-    NextPage,
-    PrevPage,
-    SelectDir,
-    DlxVersionCheck,
-    InstallSprCheck,
-    VolumeCheck,
-    Install,
-    Preparing,
-    Downloading,
-    Extracting,
-    DownloadingSpr,
-    ExtractingSpr,
-    CleaningUp,
-    Error,
-    Abort,
-    Done
-}
-
-type InstallResult = Result<(), InstallerError>;
 
 
 /// The entry point
