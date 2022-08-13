@@ -4,6 +4,7 @@
 mod app;
 mod audio;
 mod errors;
+mod installer;
 mod static_data;
 mod utils;
 

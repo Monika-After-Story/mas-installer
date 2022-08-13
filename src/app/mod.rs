@@ -25,7 +25,7 @@ use fltk::{
 
 use state::{ThreadSafeState, build_thread_safe_state};
 use crate::{Message, InstallResult};
-use super::{audio, utils, errors};
+use super::{audio, errors, installer, utils};
 use errors::InstallerError;
 
 
@@ -192,7 +192,7 @@ impl InstallerApp {
                         self.cleanup_th_handle();
                         // Start a new thread
                         self.installer_th_handle = Some(
-                            utils::install_game_in_thread(self.sender, &self.state)
+                            installer::install_game_in_thread(self.sender, &self.state)
                         );
                     },
                     Message::Preparing => {
