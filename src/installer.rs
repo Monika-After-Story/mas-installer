@@ -5,6 +5,7 @@ use std::{
     fs::{File, create_dir_all},
     io,
     cmp::min,
+    collections::HashMap,
     thread,
     time::Duration
 };
@@ -17,6 +18,8 @@ use reqwest::{
     blocking as req_blocking,
     header as headers
 };
+
+use serde::{Serialize, Deserialize};
 
 use zip::ZipArchive;
 
@@ -37,13 +40,72 @@ const PAUSE_DURATION: Duration = Duration::from_millis(200);
 
 
 pub type InstallResult = Result<(), InstallError>;
+pub type ContentSize = u64;
 
 /// Struct representing release data we may need
-/// (like download links)
+#[derive(Debug)]
+#[allow(dead_code)]
 struct ReleaseData {
-    def_dl_link: String,
-    dlx_dl_link: String,
-    spr_dl_link: String
+    version: String,
+    name: String,
+    def_ver_asset: GHAsset,
+    dlx_ver_asset: GHAsset,
+    spr_asset: GHAsset
+}
+
+impl ReleaseData {
+    /// Creates new release data
+    pub fn new(
+        version: String,
+        name: String,
+        def_ver_asset: GHAsset,
+        dlx_ver_asset: GHAsset,
+        spr_asset: GHAsset
+    ) -> Self {
+        return Self { version, name, def_ver_asset, dlx_ver_asset, spr_asset };
+    }
+}
+
+/// Represents an attachment in a GitHub release
+#[derive(Serialize, Deserialize, Debug)]
+struct GHAsset {
+    name: String,
+    size: ContentSize,
+    browser_download_url: String
+}
+
+impl GHAsset {
+    /// Check if this asset is valid
+    #[allow(unused_parens)]
+    pub fn is_valid(&self) -> bool {
+        return (
+            !self.name.is_empty()
+            && self.size != 0
+            && !self.browser_download_url.is_empty()
+            && self.browser_download_url.starts_with("https://")
+            && self.browser_download_url.ends_with(".zip")
+        );
+    }
+}
+
+/// Represents a GitHub release
+#[derive(Serialize, Deserialize, Debug)]
+struct GHRelease {
+    tag_name: String,
+    name: String,
+    assets: Vec<GHAsset>
+}
+
+impl GHRelease {
+    /// Check if this release is valid
+    #[allow(unused_parens)]
+    pub fn is_valid(&self) -> bool {
+        return (
+            !self.tag_name.is_empty()
+            && !self.name.is_empty()
+            && !self.assets.len() != 0
+        );
+    }
 }
 
 
@@ -72,8 +134,6 @@ pub fn build_client() -> Result<req_blocking::Client, InstallError> {
 
 /// Requests release data from github
 fn get_release_data(client: &req_blocking::Client) -> Result<ReleaseData, InstallError> {
-    const DL_URL_KEY: &str = "browser_download_url";
-
     let data = client.get(
         format!(
             "https://api.github.com/repos/{}/{}/releases/latest",
@@ -82,30 +142,56 @@ fn get_release_data(client: &req_blocking::Client) -> Result<ReleaseData, Instal
         )
     ).send()?.bytes()?;
 
-    let json_data: serde_json::Value = serde_json::from_slice(&data)?;
-    let assets_list = json_data.get("assets").ok_or(InstallError::CorruptedJSON("missing the assets field"))?;
+    let release: GHRelease = serde_json::from_slice(&data)?;
+    if !release.is_valid() {
+        eprintln!("Release '{:?}' is invalid", release);
+        return Err(InstallError::CorruptedJSON("Latest release is invalid"));
+    }
 
-    let def_dl_link = assets_list.get(crate::DEF_VERSION_ASSET_ID).ok_or(InstallError::CorruptedJSON("missing the def version asset"))?
-        .get(DL_URL_KEY).ok_or(InstallError::CorruptedJSON("missing the def version download link field"))?
-        .as_str().ok_or(InstallError::CorruptedJSON("couldn't parse link to a str"))?
-        .to_owned();
-    let dlx_dl_link = assets_list.get(crate::DLX_VERSION_ASSET_ID).ok_or(InstallError::CorruptedJSON("missing the deluxe version asset"))?
-        .get(DL_URL_KEY).ok_or(InstallError::CorruptedJSON("missing the dlx version download link field"))?
-        .as_str().ok_or(InstallError::CorruptedJSON("couldn't parse link to a str"))?
-        .to_owned();
-    let spr_dl_link = assets_list.get(crate::SPR_ASSET_ID).ok_or(InstallError::CorruptedJSON("missing spritepack asset"))?
-        .get(DL_URL_KEY).ok_or(InstallError::CorruptedJSON("missing the spritepacks download link field"))?
-        .as_str().ok_or(InstallError::CorruptedJSON("couldn't parse link to a str"))?
-        .to_owned();
+    // Create a map of the assets we need
+    let mut assets_map = HashMap::new();
+    for k in crate::ASSETS_NAMES_RE_MAP.keys() {
+        assets_map.insert(*k, None);
+    }
 
-    let data = ReleaseData {
-        def_dl_link,
-        dlx_dl_link,
-        spr_dl_link
-    };
+    // Search thru all the available assets and find the ones we need
+    'outer_loop: for asset in release.assets {
+        for (k, v) in assets_map.iter_mut() {
+            if v.is_none() && crate::ASSETS_NAMES_RE_MAP[k].is_match(&asset.name) {
+                if !asset.is_valid() {
+                    eprintln!("Asset '{}' is invalid", asset.name);
+                    return Err(InstallError::CorruptedJSON("Found a required asset, but it's invalid"));
+                }
+                *v = Some(asset);
+                // We need to move to the next asset since this once has been moved
+                continue 'outer_loop;
+            }
+        }
+    }
+
+    if assets_map.values().filter(|i| i.is_some()).collect::<Vec<_>>().len() != crate::ASSETS_NAMES_RE_MAP.len() {
+        return Err(InstallError::CorruptedJSON("An asset is missing from the release"));
+    }
+
+    let data = ReleaseData::new(
+        release.tag_name,
+        release.name,
+        assets_map.remove("def_ver").unwrap().unwrap(),
+        assets_map.remove("dlx_ver").unwrap().unwrap(),
+        assets_map.remove("spr").unwrap().unwrap()
+    );
     return Ok(data);
 }
 
+
+fn get_content_size(client: &req_blocking::Client, download_link: &str) -> Result<ContentSize, DownloadError> {
+    let resp = client.head(download_link).send()?;
+    let content_size = resp.headers().get(headers::CONTENT_LENGTH)
+        .ok_or(DownloadError::InvalidContentLen)?
+        .to_str().ok().ok_or(DownloadError::InvalidContentLen)?
+        .parse::<ContentSize>().ok().ok_or(DownloadError::InvalidContentLen)?;
+    return Ok(content_size);
+}
 
 /// Downloads data from the given link using the provided client
 /// the data is being written into the given file handler
@@ -114,9 +200,10 @@ fn download_to_file(
     sender: Sender<Message>,
     app_state: &ThreadSafeState,
     download_link: &str,
+    content_size: Option<ContentSize>,
     file: &mut File
 ) -> Result<(), DownloadError> {
-    const DEF_CHUNK_SIZE: u128 = 1024*1024*8 + 1;
+    const DEF_CHUNK_SIZE: ContentSize = 1024*1024*8 + 1;
 
     sender.send(Message::UpdateProgressBar(0.0));
 
@@ -124,16 +211,15 @@ fn download_to_file(
         return Ok(());
     }
 
-    let resp = client.head(download_link).send()?;
-    let content_size = resp.headers().get(headers::CONTENT_LENGTH)
-        .ok_or(DownloadError::InvalidContentLen)?
-        .to_str().ok().ok_or(DownloadError::InvalidContentLen)?
-        .parse::<u128>().ok().ok_or(DownloadError::InvalidContentLen)?;
+    let content_size: ContentSize = match content_size {
+        None => get_content_size(client, download_link)?,
+        Some(v) => v
+    };
 
-    let chunk_size: u128 = min(DEF_CHUNK_SIZE, content_size);
-    let mut low_bound: u128 = 0;
-    let mut up_bound: u128 = chunk_size;
-    let mut total_downloaded: u128 = 0;
+    let chunk_size: ContentSize = min(DEF_CHUNK_SIZE, content_size);
+    let mut low_bound: ContentSize = 0;
+    let mut up_bound: ContentSize = chunk_size;
+    let mut total_downloaded: ContentSize = 0;
 
     // println!("Content size: {}", content_size);
     loop {
@@ -149,7 +235,7 @@ fn download_to_file(
         }
 
         // Write the received data
-        let received_chunk = resp.copy_to(file)? as u128;
+        let received_chunk = resp.copy_to(file)? as ContentSize;
         total_downloaded += received_chunk;
 
         // Update progress bar
@@ -285,11 +371,10 @@ pub fn install_game(
 
     // Get download link
     let data = get_release_data(&client)?;
-    let download_link = match app_state.lock().unwrap().get_deluxe_ver_flag() {
-        true => data.dlx_dl_link,
-        false => data.def_dl_link
+    let main_asset = match app_state.lock().unwrap().get_deluxe_ver_flag() {
+        true => data.dlx_ver_asset,
+        false => data.def_ver_asset
     };
-    // let download_link = String::from("https://github.com/Monika-After-Story/MonikaModDev/releases/download/v0.12.9/spritepacks-combined.zip");
     let destination = app_state.lock().unwrap().get_extraction_dir().clone();
 
     sender.send(Message::UpdateProgressBar(0.5));
@@ -309,7 +394,8 @@ pub fn install_game(
         &client,
         sender,
         app_state,
-        &download_link,
+        &main_asset.browser_download_url,
+        Some(main_asset.size),
         &mut mas_temp_file
     )?;
     if app_state.lock().unwrap().get_abort_flag() {
@@ -341,7 +427,8 @@ pub fn install_game(
         &client,
         sender,
         app_state,
-        &data.spr_dl_link,
+        &data.spr_asset.browser_download_url,
+        Some(data.spr_asset.size),
         &mut spr_temp_file
     )?;
     if app_state.lock().unwrap().get_abort_flag() {
