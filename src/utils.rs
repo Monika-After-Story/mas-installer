@@ -36,7 +36,7 @@ pub fn is_valid_ddlc_dir(path: &PathBuf) -> bool {
     const TOTAL_CONDITIONS: u16 = 5;
     const REQUIRED_FLAG: u16 = 2 << TOTAL_CONDITIONS;
 
-    if !path.exists() || !path.is_dir() {
+    if !path.is_dir() {
         return false;
     }
 

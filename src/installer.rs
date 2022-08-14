@@ -2,7 +2,7 @@
 
 use std::{
     path::Path,
-    fs::{File, create_dir_all},
+    fs::{File, create_dir_all, read_dir, remove_file},
     io,
     cmp::min,
     collections::HashMap,
@@ -184,6 +184,47 @@ fn get_release_data(client: &req_blocking::Client) -> Result<ReleaseData, Instal
 }
 
 
+/// Unlinks rpy and rpyc files on the given path
+/// This function is "best-effort" and will silently ignore errors
+fn remove_rpy(path: &Path) {
+    if !path.is_dir() {
+        return;
+    }
+
+    let content = read_dir(path);
+    if content.is_err() {
+        return;
+    }
+
+    let content = content.unwrap();
+    for item in content {
+        if let Ok(item) = item {
+            let item_path = item.path();
+            if !item_path.is_file() {
+                continue;
+            }
+            let ext = item_path.extension();
+            if let Some(ext) = ext {
+                let ext = ext.to_str();
+                if ext.is_none() {
+                    continue;
+                }
+                let ext = ext.unwrap();
+                match ext {
+                    "rpy" | "rpyc" => {
+                        if remove_file(&item_path).is_err() {
+                            eprintln!("Failed to delete '{}'", item_path.display());
+                        }
+                    },
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
+
+/// Tries to query content len on the given link
 fn get_content_size(client: &req_blocking::Client, download_link: &str) -> Result<ContentSize, DownloadError> {
     let resp = client.head(download_link).send()?;
     let content_size = resp.headers().get(headers::CONTENT_LENGTH)
@@ -384,6 +425,11 @@ pub fn install_game(
     let temp_dir = create_temp_dir()?;
     let mut mas_temp_file = create_temp_file(&temp_dir, "mas.tmp")?;
     let mut spr_temp_file = create_temp_file(&temp_dir, "spr.tmp")?;
+
+    // Remove old rpy/rpyc
+    // Yeah...some people have rpy in the base dir...
+    remove_rpy(&destination);
+    remove_rpy(&destination.join("game"));
 
     sender.send(Message::UpdateProgressBar(1.0));
     sleep();
