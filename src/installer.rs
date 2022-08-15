@@ -76,15 +76,14 @@ struct GHAsset {
 
 impl GHAsset {
     /// Check if this asset is valid
-    #[allow(unused_parens)]
     pub fn is_valid(&self) -> bool {
-        return (
+        return {
             !self.name.is_empty()
             && self.size != 0
             && !self.browser_download_url.is_empty()
             && self.browser_download_url.starts_with("https://")
             && self.browser_download_url.ends_with(".zip")
-        );
+        };
     }
 }
 
@@ -98,13 +97,12 @@ struct GHRelease {
 
 impl GHRelease {
     /// Check if this release is valid
-    #[allow(unused_parens)]
     pub fn is_valid(&self) -> bool {
-        return (
+        return {
             !self.tag_name.is_empty()
             && !self.name.is_empty()
             && !self.assets.len() != 0
-        );
+        };
     }
 }
 
