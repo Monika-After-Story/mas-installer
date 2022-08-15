@@ -14,8 +14,8 @@ use fltk::app::{
     Sender
 };
 
-use reqwest::{
-    blocking as req_blocking,
+use ::reqwest::{
+    blocking as reqwest,
     header as headers
 };
 
@@ -114,24 +114,18 @@ fn sleep() {
 
 
 /// Builds a client for this installer to access GitHub API
-pub fn build_client() -> Result<req_blocking::Client, InstallError> {
-    use headers::HeaderValue;
-
-    let mut headers = headers::HeaderMap::new();
-    headers.append(headers::USER_AGENT, HeaderValue::from_static("Monika After Story Installer"));
-    headers.append(headers::ACCEPT_CHARSET, HeaderValue::from_static("utf8"));
-    headers.append(headers::ACCEPT_LANGUAGE, HeaderValue::from_static("en-US"));
-    headers.append(headers::CONTENT_LANGUAGE, HeaderValue::from_static("en-US"));
-
-    let client = req_blocking::Client::builder()
+pub fn build_client() -> Result<reqwest::Client, InstallError> {
+    let headers = crate::HEADERS.clone();
+    let client = reqwest::Client::builder()
         .default_headers(headers)
         .build()?;
+
     return Ok(client);
 }
 
 
 /// Requests release data from github
-fn get_release_data(client: &req_blocking::Client) -> Result<ReleaseData, InstallError> {
+fn get_release_data(client: &reqwest::Client) -> Result<ReleaseData, InstallError> {
     let data = client.get(
         format!(
             "https://api.github.com/repos/{}/{}/releases/latest",
@@ -223,7 +217,7 @@ fn remove_rpy(path: &Path) {
 
 
 /// Tries to query content len on the given link
-fn get_content_size(client: &req_blocking::Client, download_link: &str) -> Result<ContentSize, DownloadError> {
+fn get_content_size(client: &reqwest::Client, download_link: &str) -> Result<ContentSize, DownloadError> {
     let resp = client.head(download_link).send()?;
     let content_size = resp.headers().get(headers::CONTENT_LENGTH)
         .ok_or(DownloadError::InvalidContentLen)?
@@ -235,7 +229,7 @@ fn get_content_size(client: &req_blocking::Client, download_link: &str) -> Resul
 /// Downloads data from the given link using the provided client
 /// the data is being written into the given file handler
 fn download_to_file(
-    client: &req_blocking::Client,
+    client: &reqwest::Client,
     sender: Sender<Message>,
     app_state: &ThreadSafeState,
     download_link: &str,
