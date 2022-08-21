@@ -6,7 +6,7 @@ pub mod state;
 pub mod styles;
 
 
-use std::{thread, mem, path::PathBuf};
+use std::{thread, path::PathBuf};
 
 use fltk::{
     app::{
@@ -313,16 +313,9 @@ impl InstallerApp {
     /// Joins the installer thread handle
     /// Returns an optional error if the install thread failed
     fn cleanup_th_handle(&mut self) -> Option<InstallError> {
-        // I couldn't find a way to join a thread behind a "mut self reference"
-        // This *should* work, but it doesn't:
-        //      self.installer_th_handle.unwrap().join();
-        //      self.installer_th_handle = None;
-        // We can do a trick tho: move the handle to a new variable and put None into the old variable using mem::replace
-        // Technically that is what I'd do in the example above too,
-        // but I guess the compiler can't understand it
-        let th_handle = mem::replace(&mut self.installer_th_handle, None);
-
-        if let Some(th_handle) = th_handle {
+        // Rust doesn't allow to have "empty" struct fields, even if we know it's safe
+        // so use .take() to replace the value with None
+        if let Some(th_handle) = self.installer_th_handle.take() {
             match th_handle.join() {
                 Ok(rv) => {
                     if let Err(e) = rv {
@@ -367,8 +360,7 @@ impl Drop for InstallerApp {
         self.abort_installation();
         self.cleanup_th_handle();
         // Stop the music, cleanup memory
-        let am = mem::replace(&mut self.audio_manager, None);
-        if let Some(am) = am {
+        if let Some(am) = self.audio_manager.take() {
             am.stop();
         }
         // Stop the app
