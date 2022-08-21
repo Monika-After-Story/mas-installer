@@ -10,6 +10,8 @@ use fltk::{
     image::PngImage
 };
 
+use lazy_static::lazy_static;
+
 
 // App title
 pub const WIN_TITLE: &str = "Monika After Story Installer";
@@ -171,7 +173,7 @@ pub const DONE_MID_FRAME_LABEL: &str = concat!(
 
 
 // Define images
-lazy_static::lazy_static! {
+lazy_static! {
     pub static ref VOLUME_BUT_IMG: Mutex<PngImage> = Mutex::new(
         PngImage::from_data(crate::static_data::VOLUME_BUT_DATA).unwrap()
     );
