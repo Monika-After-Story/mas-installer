@@ -142,35 +142,37 @@ fn get_release_data(client: &reqwest::Client) -> Result<ReleaseData, InstallErro
 
     // Create a map of the assets we need
     let mut assets_map = HashMap::new();
-    for k in crate::ASSETS_NAMES_RE_MAP.keys() {
-        assets_map.insert(*k, None);
-    }
 
     // Search thru all the available assets and find the ones we need
     'outer_loop: for asset in release.assets {
-        for (k, v) in assets_map.iter_mut() {
-            if v.is_none() && crate::ASSETS_NAMES_RE_MAP[k].is_match(&asset.name) {
+        // Quit early if we filled the map
+        if assets_map.len() == crate::ASSETS_NAMES_RE_MAP.len() {
+            break;
+        }
+        // Use regex to find the assets
+        for (k, v) in crate::ASSETS_NAMES_RE_MAP.iter() {
+            if !assets_map.contains_key(k) && v.is_match(&asset.name) {
                 if !asset.is_valid() {
                     eprintln!("Asset '{}' is invalid", asset.name);
                     return Err(InstallError::CorruptedJSON("Found a required asset, but it's invalid"));
                 }
-                *v = Some(asset);
+                assets_map.insert(*k, asset);
                 // We need to move to the next asset since this once has been moved
                 continue 'outer_loop;
             }
         }
     }
 
-    if assets_map.values().filter(|i| i.is_some()).collect::<Vec<_>>().len() != crate::ASSETS_NAMES_RE_MAP.len() {
+    if assets_map.len() != crate::ASSETS_NAMES_RE_MAP.len() {
         return Err(InstallError::CorruptedJSON("An asset is missing from the release"));
     }
 
     let data = ReleaseData::new(
         release.tag_name,
         release.name,
-        assets_map.remove("def_ver").unwrap().unwrap(),
-        assets_map.remove("dlx_ver").unwrap().unwrap(),
-        assets_map.remove("spr").unwrap().unwrap()
+        assets_map.remove("def_ver").unwrap(),
+        assets_map.remove("dlx_ver").unwrap(),
+        assets_map.remove("spr").unwrap()
     );
     return Ok(data);
 }
