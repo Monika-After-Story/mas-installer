@@ -20,4 +20,4 @@ pub static VOLUME_BUT_UNCHECK_HOVER_DATA: &'static [u8] = include_bytes!("static
 // Sounds
 // Credits: Doki Doki Literature Club - Main Theme (Your Reality) (8-bit Remix)
 // by MyNewSoundtrack https://www.youtube.com/user/MyNewSoundtrack
-pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/MyNewSoundtrack-Main_Theme_Doki_Doki_Literature_Club.ogg");
+pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/installer_theme.ogg");
