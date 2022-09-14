@@ -7,6 +7,7 @@ use std::{
         Mutex
     },
 };
+use crate::audio::Volume;
 
 
 pub type ThreadSafeState = Arc<Mutex<AppState>>;
@@ -18,17 +19,25 @@ pub struct AppState {
     extraction_dir: PathBuf,
     abort_flag: bool,
     deluxe_ver_flag: bool,
-    install_spr_flag: bool
+    install_spr_flag: bool,
+    music_volume: Volume
 }
 
 impl AppState {
     /// Creates a new AppState
-    pub fn new( extraction_dir: PathBuf, abort_flag: bool, deluxe_ver_flag: bool, install_spr_flag: bool) -> Self {
+    pub fn new(
+        extraction_dir: PathBuf,
+        abort_flag: bool,
+        deluxe_ver_flag: bool,
+        install_spr_flag: bool,
+        music_volume: Volume
+    ) -> Self {
         return Self {
             extraction_dir,
             abort_flag,
             deluxe_ver_flag,
-            install_spr_flag
+            install_spr_flag,
+            music_volume
         };
     }
 
@@ -88,6 +97,16 @@ impl AppState {
     pub fn set_extraction_dir(&mut self, new_path: PathBuf) {
         self.extraction_dir = new_path;
     }
+
+    /// Returns the abort flag
+    pub fn get_music_volume(&self) -> Volume {
+        return self.music_volume;
+    }
+
+    /// Sets the abort flag
+    pub fn set_music_volume(&mut self, value: Volume) {
+        self.music_volume = value;
+    }
 }
 
 impl Default for AppState {
@@ -96,7 +115,8 @@ impl Default for AppState {
             crate::utils::get_cwd(),
             false,
             true,
-            false
+            false,
+            1.0
         );
     }
 }

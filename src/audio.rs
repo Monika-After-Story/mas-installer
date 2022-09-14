@@ -18,7 +18,7 @@ use crate::{
 };
 
 
-type Volume = f32;
+pub type Volume = f32;
 type RawData = &'static[u8];
 type SampleType = f32;
 type Sauce = SamplesConverter<Decoder<Cursor<RawData>>, SampleType>;

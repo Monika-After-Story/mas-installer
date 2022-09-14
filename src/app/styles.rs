@@ -174,10 +174,16 @@ pub const DONE_MID_FRAME_LABEL: &str = concat!(
 
 // Define images
 lazy_static! {
-    pub static ref VOLUME_BUT_IMG: Mutex<PngImage> = Mutex::new(
-        PngImage::from_data(crate::static_data::VOLUME_BUT_DATA).unwrap()
+    pub static ref VOLUME_BUT_CHECK_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_CHECK_DATA).unwrap()
     );
-    pub static ref VOLUME_BUT_HOVER_IMG: Mutex<PngImage> = Mutex::new(
-        PngImage::from_data(crate::static_data::VOLUME_BUT_HOVER_DATA).unwrap()
+    pub static ref VOLUME_BUT_CHECK_HOVER_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_CHECK_HOVER_DATA).unwrap()
+    );
+    pub static ref VOLUME_BUT_UNCHECK_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_UNCHECK_DATA).unwrap()
+    );
+    pub static ref VOLUME_BUT_UNCHECK_HOVER_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_UNCHECK_HOVER_DATA).unwrap()
     );
 }

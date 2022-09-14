@@ -104,11 +104,11 @@ impl InstallerApp {
             let is_dlx_version = s.get_deluxe_ver_flag();
             let install_spr = s.get_install_spr_flag();
             [
-                builder::build_welcome_win(sender),
-                builder::build_license_win(sender),
-                builder::build_select_dir_win(sender, path_txt_buf.clone()),
-                builder::build_options_win(sender, is_dlx_version, install_spr),
-                builder::build_propgress_win(sender, &progress_bar)
+                builder::build_welcome_win(sender, &state),
+                builder::build_license_win(sender, &state),
+                builder::build_select_dir_win(sender, &state, path_txt_buf.clone()),
+                builder::build_options_win(sender, &state, is_dlx_version, install_spr),
+                builder::build_propgress_win(sender, &state, &progress_bar)
             ]
         };
 
@@ -193,14 +193,19 @@ impl InstallerApp {
                     }
                     Message::VolumeCheck => {
                         if let Some(ref am) = self.audio_manager {
-                            if am.get_volume() == 0.0{
+                            let mut app_state = self.state.lock().unwrap();
+                            if am.get_volume() == 0.0 {
                                 am.set_volume(1.0);
+                                app_state.set_music_volume(1.0);
                                 println!("Audio unmuted...")
                             }
                             else {
                                 am.set_volume(0.0);
+                                app_state.set_music_volume(0.0);
                                 println!("Audio muted...")
                             }
+                            drop(app_state);
+                            self.redraw_current_window();
                         }
                     }
                     Message::Install => {
@@ -294,6 +299,11 @@ impl InstallerApp {
     #[allow(dead_code)]
     pub fn show_current_window(&mut self) {
         self.linked_windows[self.current_window_id].show();
+    }
+
+    /// Redraws current window
+    pub fn redraw_current_window(&mut self) {
+        self.linked_windows[self.current_window_id].redraw();
     }
 
     /// Hides current and shows next (current id + 1) window
