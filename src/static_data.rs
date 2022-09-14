@@ -16,5 +16,6 @@ pub static VOLUME_BUT_DATA: &'static [u8] = include_bytes!("static/but_volume.pn
 pub static VOLUME_BUT_HOVER_DATA: &'static [u8] = include_bytes!("static/but_volume_hover.png");
 
 // Sounds
-// Credits: Ludum Dare 28 - Tracks 3 by @ben_burnes http://abstractionmusic.bandcamp.com/
-pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/ludum_dare_28_track_3.ogg");
+// Credits: Doki Doki Literature Club - Main Theme (Your Reality) (8-bit Remix)
+// by MyNewSoundtrack https://www.youtube.com/user/MyNewSoundtrack
+pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/MyNewSoundtrack-Main_Theme_Doki_Doki_Literature_Club.ogg");
