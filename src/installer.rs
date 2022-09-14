@@ -2,7 +2,7 @@
 
 use std::{
     path::Path,
-    fs::{File, create_dir_all, read_dir, remove_file},
+    fs::{File, create_dir_all, read_dir, remove_file, remove_dir_all},
     io,
     cmp::min,
     collections::HashMap,
@@ -178,9 +178,10 @@ fn get_release_data(client: &reqwest::Client) -> Result<ReleaseData, InstallErro
 }
 
 
-/// Unlinks rpy and rpyc files on the given path
-/// This function is "best-effort" and will silently ignore errors
-fn remove_rpy(path: &Path) {
+/// Prepares a DDLC directory (unlinks some files/folders at the given path)
+/// This function is "best-effort" and will ignore errors
+/// TPG, I know you will love these nested ifs
+fn prepare_ddlc_dir(path: &Path, remove_rpy: bool, remove_bin: bool) {
     if !path.is_dir() {
         return;
     }
@@ -194,23 +195,42 @@ fn remove_rpy(path: &Path) {
     for item in content {
         if let Ok(item) = item {
             let item_path = item.path();
-            if !item_path.is_file() {
-                continue;
-            }
-            let ext = item_path.extension();
-            if let Some(ext) = ext {
-                let ext = ext.to_str();
-                if ext.is_none() {
-                    continue;
+            // handle rpy files
+            if remove_rpy && item_path.is_file() {
+                let ext = item_path.extension();
+                if let Some(ext) = ext {
+                    let ext = ext.to_str();
+                    if ext.is_none() {
+                        continue;
+                    }
+                    let ext = ext.unwrap();
+                    match ext {
+                        "rpy" | "rpyc" => {
+                            if remove_file(&item_path).is_err() {
+                                eprintln!("Failed to delete '{}'", item_path.display());
+                            }
+                        },
+                        _ => {}
+                    }
                 }
-                let ext = ext.unwrap();
-                match ext {
-                    "rpy" | "rpyc" => {
-                        if remove_file(&item_path).is_err() {
-                            eprintln!("Failed to delete '{}'", item_path.display());
+            }
+            // handle folders with binaries
+            else if remove_bin && item_path.is_dir() {
+                let dir_name = item_path.file_name();
+                if let Some(dir_name) = dir_name {
+                    let dir_name = dir_name.to_str();
+                    if dir_name.is_none() {
+                        continue;
+                    }
+                    let dir_name = dir_name.unwrap();
+                    match dir_name {
+                        "renpy" | "lib" => {
+                            if remove_dir_all(&item_path).is_err() {
+                                eprintln!("Failed to delete '{}'", item_path.display());
+                            }
                         }
-                    },
-                    _ => {}
+                        _ => {}
+                    }
                 }
             }
         }
@@ -422,8 +442,8 @@ pub fn install_game(
 
     // Remove old rpy/rpyc
     // Yeah...some people have rpy in the base dir...
-    remove_rpy(&destination);
-    remove_rpy(&destination.join("game"));
+    prepare_ddlc_dir(&destination, true, true);
+    prepare_ddlc_dir(&destination.join("game"), true, false);
 
     sender.send(Message::UpdateProgressBar(1.0));
     sleep();
