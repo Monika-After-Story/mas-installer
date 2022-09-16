@@ -97,6 +97,12 @@ pub const MID_FRAME_LABEL_SIZE: i32 = TOP_FRAME_LABEL_SIZE;
 
 pub const MSG_FRAME_LABEL_SIZE: i32 = LABEL_SIZE_MED;
 
+pub const CREDITS_FRAME_XPOS: i32 = 0;
+pub const CREDITS_FRAME_YPOS: i32 = INNER_WIN_HEIGHT - CREDITS_FRAME_HEIGHT;
+pub const CREDITS_FRAME_WIDTH: i32 = INNER_WIN_WIDTH;
+pub const CREDITS_FRAME_HEIGHT: i32 = 20;
+pub const CREDITS_FRAME_LABEL_SIZE: i32 = 14;
+
 
 // Text display constants
 pub const TXT_DISP_XPOS: i32 = INNER_WIN_CONTENT_XPADDING;
@@ -170,6 +176,7 @@ pub const DONE_MID_FRAME_LABEL: &str = concat!(
     "Monika After Story has been successfully\n",
     "installed on your computer"
 );
+pub const CREDITS_FRAME_LABEL: &str = "Installer theme by https://www.youtube.com/user/MyNewSoundtrack";
 
 
 // Define images

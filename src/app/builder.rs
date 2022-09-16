@@ -108,6 +108,9 @@ pub fn build_inner_win() -> DoubleWindow {
         .with_pos(WIN_PADDING, WIN_PADDING);
     inner_win.set_color(C_DDLC_WHITE_IDLE);
 
+    // All windows must show credits
+    _build_credits_frame();
+
     inner_win.end();
     inner_win.hide();
 
@@ -366,6 +369,22 @@ fn _build_mid_frame(label: &str) -> Frame {
     frame.set_label(label);
     frame.set_label_color(C_DDLC_PINK_DARK);
     frame.set_label_size(MID_FRAME_LABEL_SIZE);
+
+    return frame;
+}
+
+
+/// Builds a frame containing credits text
+fn _build_credits_frame() -> Frame {
+    let mut frame = Frame::default()
+        .with_size(CREDITS_FRAME_WIDTH, CREDITS_FRAME_HEIGHT)
+        .with_pos(CREDITS_FRAME_XPOS, CREDITS_FRAME_YPOS);
+    // frame.set_frame(FrameType::FlatBox);
+    // frame.set_color(C_BLACK);
+    frame.set_align(Align::Left | Align::Inside);
+    frame.set_label(CREDITS_FRAME_LABEL);
+    frame.set_label_color(C_DDLC_PINK_DARK);
+    frame.set_label_size(CREDITS_FRAME_LABEL_SIZE);
 
     return frame;
 }
