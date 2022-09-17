@@ -18,11 +18,11 @@ Cross-platform installer for [Monika After Story](https://github.com/Monika-Afte
 - Music during installation
 
 ### Main stack:
-- Rust 1.62
+- Rust 1.62 (can build >= 1.59)
 - FLTK 1.3
 
 ### Building from source:
 - Building is straightforward using [`cargo`](https://github.com/rust-lang/cargo/)
-- - **You need to add a license.md to your static folder**
+- - build with `--no-default-features` to not need `license.md`
 - - Linux: you might need to install some dependencies (check [this workflow](https://github.com/Monika-After-Story/mas-installer/blob/master/.github/workflows/build.yml) for more details)
 - - Windows: for now both `msvc` and `gnu` toolchains are supported, but `msvc` is more preferable
