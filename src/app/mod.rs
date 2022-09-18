@@ -23,6 +23,7 @@ use fltk::{
     },
     window::DoubleWindow
 };
+use webbrowser;
 
 use state::{ThreadSafeState, build_thread_safe_state};
 use super::{audio, errors, installer, utils};
@@ -49,7 +50,9 @@ pub enum Message {
     CleaningUp,
     Error,
     Abort,
-    Done
+    Done,
+    OpenCredits,
+    OpenChangelog
 }
 
 
@@ -272,6 +275,16 @@ impl InstallerApp {
                         self.abort_installation();
                         self.hide_current_window();
                         self.done_window.show();
+                    },
+                    Message::OpenCredits => {
+                        if let Err(e) = webbrowser::open(crate::CREDITS_URL) {
+                            eprintln!("Failed to open browser {e}");
+                        };
+                    },
+                    Message::OpenChangelog => {
+                        if let Err(e) = webbrowser::open(crate::CHANGELOG_URL) {
+                            eprintln!("Failed to open browser {e}");
+                        };
                     }
                 };
             }

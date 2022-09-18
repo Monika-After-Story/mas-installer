@@ -164,7 +164,7 @@ fn __draw_button_widget(b: &mut dyn WidgetExt) {
     draw::draw_rect_fill(b_x, b_y, b_w, b_h, frame_color);
     draw::draw_rect_fill(b_x+BUT_PADDING, b_y+BUT_PADDING, b_w-BUT_PADDING*2, b_h-BUT_PADDING*2, bg_color);
     draw::set_draw_color(text_color);// for the text
-    draw::set_font(BUT_FONT, BUT_FONT_SIZE);
+    draw::set_font(BUT_FONT, b.label_size());
     draw::draw_text2(&b.label(), b_x, b_y, b_w, b_h, b.align());
     b.redraw();
 }
@@ -184,6 +184,7 @@ where
         .with_size(width, height)
         .with_label(label);
 
+    but.set_label_size(BUT_FONT_SIZE);
     but.visible_focus(false);
     but.handle(handler);
     but.draw(draw);
@@ -899,6 +900,25 @@ pub fn build_msg_win(msg: &str) -> DoubleWindow {
 }
 
 
+/// Builds a pack for the end screens
+fn _build_end_but_pack(sender: Sender<Message>) -> Pack {
+    let mut pack = Pack::default()
+        .with_size(INNER_WIN_WIDTH-INNER_WIN_CONTENT_XPADDING*2, BUT_HEIGHT)
+        .with_pos(INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING)
+        .with_align(Align::Left)
+        .with_type(PackType::Horizontal);
+
+    pack.set_spacing(BUT_SPACING);
+
+    let mut credits_but = build_button(BUT_CREDITS_LABEL, sender, Message::OpenCredits);
+    credits_but.set_label_size(11);
+    build_button(BUT_CHANGELOG_LABEL, sender, Message::OpenChangelog);
+
+    pack.end();
+
+    return pack;
+}
+
 fn _build_exit_button(sender: Sender<Message>) -> Button {
     let mut but = build_button(BUT_EXIT_LABEL, sender, Message::Close);
     but.set_pos(INNER_WIN_WIDTH-BUT_WIDTH-INNER_WIN_CONTENT_XPADDING, INNER_WIN_HEIGHT-BUT_HEIGHT-BUT_PACK_YPADDING);
@@ -928,6 +948,8 @@ pub fn build_done_win(sender: Sender<Message>) -> DoubleWindow {
 
     _build_top_frame(DONE_TOP_FRAME_LABEL);
     _build_mid_frame(DONE_MID_FRAME_LABEL);
+
+    _build_end_but_pack(sender);
 
     _build_exit_button(sender);
 

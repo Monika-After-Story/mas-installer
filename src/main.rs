@@ -10,9 +10,11 @@ mod utils;
 
 
 use std::collections::HashMap;
+
 use regex::Regex;
 use lazy_static::lazy_static;
 use reqwest::header::{self, HeaderValue, HeaderMap};
+use const_format;
 
 
 // Get version from the cargo
@@ -22,6 +24,9 @@ const DEF_VERSION: &str = "unknown build";
 // GH link parts to accept the API
 const ORG_NAME: &str = "Monika-After-Story";
 const REPO_NAME: &str = "MonikaModDev";
+
+const CREDITS_URL: &str = "https://www.youtube.com/user/MyNewSoundtrack";
+const CHANGELOG_URL: &str = const_format::formatcp!("https://github.com/{ORG_NAME}/{REPO_NAME}/releases/latest");
 
 
 lazy_static! {

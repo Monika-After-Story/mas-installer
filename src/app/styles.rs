@@ -59,6 +59,9 @@ pub const BUT_DLX_VER_CHECK_HEIGHT: i32 = BUT_HEIGHT;
 pub const BUT_INSTALL_SPR_CHECK_WIDTH: i32 = BUT_WIDTH + 380;
 pub const BUT_INSTALL_SPR_CHECK_HEIGHT: i32 = BUT_HEIGHT;
 
+// pub const BUT_CREDITS_WIDTH: i32 = BUT_WIDTH;
+// pub const BUT_CREDITS_HEIGHT: i32 = BUT_HEIGHT;
+
 // padding of the frame within buttons
 pub const BUT_PADDING: i32 = 3;
 // Spacing between teh buttons
@@ -76,6 +79,8 @@ pub const BUT_INSTALL_SPR_CHECK_LABEL: &str = "Download spritepacks (separate do
 pub const BUT_INSTALL_LABEL: &str = "Install";
 pub const BUT_OK_LABEL: &str = "Ok";
 pub const BUT_EXIT_LABEL: &str = "Exit";
+pub const BUT_CREDITS_LABEL: &str = "MyNewSoundtrack\nYouTube channel";
+pub const BUT_CHANGELOG_LABEL: &str = "Changelog";
 
 pub const BUT_ALERT_WIN_PADDING: i32 = 10;
 pub const BUT_MSG_WIN_PADDING: i32 = BUT_ALERT_WIN_PADDING;
@@ -176,7 +181,7 @@ pub const DONE_MID_FRAME_LABEL: &str = concat!(
     "Monika After Story has been successfully\n",
     "installed on your computer"
 );
-pub const CREDITS_FRAME_LABEL: &str = "Installer theme by https://www.youtube.com/user/MyNewSoundtrack";
+pub const CREDITS_FRAME_LABEL: &str = "Installer theme by MyNewSoundtrack";
 
 
 // Define images
