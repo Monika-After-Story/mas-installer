@@ -20,6 +20,7 @@ rodio = { version = "=0.15.0", default-features = false, features = ["vorbis"] }
 regex = "=1.6.0"
 lazy_static = "=1.4.0"
 webbrowser = "=0.8.0"
+const_format = "=0.2.26"# This is temp until rust gets better constant fn
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "=0.1.12"
