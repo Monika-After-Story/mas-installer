@@ -25,3 +25,6 @@ Cross-platform installer for [Monika After Story](https://github.com/Monika-Afte
 - Building is straightforward using [`cargo`](https://github.com/rust-lang/cargo/)
 - - Linux: you might need to install some dependencies (check [this workflow](https://github.com/Monika-After-Story/mas-installer/blob/master/.github/workflows/build.yml) for more details)
 - - Windows: for now both `msvc` and `gnu` toolchains are supported, but `msvc` is more preferable
+- For all supported features check `Cargo.toml`
+- - `include_license` includes `static/license.md` into the binary during building (enabled by default)
+- - To disable all default features, use the `--no-default-features` flag in cargo
