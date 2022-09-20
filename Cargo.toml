@@ -1,6 +1,6 @@
 [package]
 name = "mas-installer"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Booplicate"]
 description = "Custom cross-platform installer for Monika After Story"
 repository = "https://github.com/Monika-After-Story/mas-installer/"
