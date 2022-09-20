@@ -40,6 +40,18 @@ pub fn is_valid_ddlc_dir(path: &PathBuf) -> bool {
         return false;
     }
 
+    if env::consts::OS == "macos" {
+        if let Some(last_dir) = path.file_name() {
+            let last_dir = last_dir.to_os_string().into_string();
+            if last_dir.is_err() {
+                return true;
+            }
+            let last_dir = last_dir.unwrap();
+            let last_dir_str = last_dir.as_str();
+            return last_dir_str == "DDLC.app";
+        }
+    }
+
     let content = read_dir(path);
     if content.is_err() {
         eprintln!("Failed to read content of the selected folder");
