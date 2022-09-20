@@ -442,7 +442,7 @@ pub fn install_game(
 
     // Remove old rpy/rpyc
     // Yeah...some people have rpy in the base dir...
-    prepare_ddlc_dir(&destination, true, true);
+    prepare_ddlc_dir(&destination, true, false);
     prepare_ddlc_dir(&destination.join("game"), true, false);
 
     sender.send(Message::UpdateProgressBar(1.0));
