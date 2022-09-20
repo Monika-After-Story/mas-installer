@@ -10,6 +10,8 @@ use fltk::{
     image::PngImage
 };
 
+use lazy_static::lazy_static;
+
 
 // App title
 pub const WIN_TITLE: &str = "Monika After Story Installer";
@@ -57,6 +59,9 @@ pub const BUT_DLX_VER_CHECK_HEIGHT: i32 = BUT_HEIGHT;
 pub const BUT_INSTALL_SPR_CHECK_WIDTH: i32 = BUT_WIDTH + 380;
 pub const BUT_INSTALL_SPR_CHECK_HEIGHT: i32 = BUT_HEIGHT;
 
+// pub const BUT_CREDITS_WIDTH: i32 = BUT_WIDTH;
+// pub const BUT_CREDITS_HEIGHT: i32 = BUT_HEIGHT;
+
 // padding of the frame within buttons
 pub const BUT_PADDING: i32 = 3;
 // Spacing between teh buttons
@@ -74,6 +79,8 @@ pub const BUT_INSTALL_SPR_CHECK_LABEL: &str = "Download spritepacks (separate do
 pub const BUT_INSTALL_LABEL: &str = "Install";
 pub const BUT_OK_LABEL: &str = "Ok";
 pub const BUT_EXIT_LABEL: &str = "Exit";
+pub const BUT_CREDITS_LABEL: &str = "MyNewSoundtrack\nYouTube channel";
+pub const BUT_CHANGELOG_LABEL: &str = "Changelog";
 
 pub const BUT_ALERT_WIN_PADDING: i32 = 10;
 pub const BUT_MSG_WIN_PADDING: i32 = BUT_ALERT_WIN_PADDING;
@@ -94,6 +101,12 @@ pub const MID_FRAME_HEIGHT: i32 = INNER_WIN_HEIGHT - MID_FRAME_YPOS - BUT_HEIGHT
 pub const MID_FRAME_LABEL_SIZE: i32 = TOP_FRAME_LABEL_SIZE;
 
 pub const MSG_FRAME_LABEL_SIZE: i32 = LABEL_SIZE_MED;
+
+pub const CREDITS_FRAME_XPOS: i32 = 0;
+pub const CREDITS_FRAME_YPOS: i32 = INNER_WIN_HEIGHT - CREDITS_FRAME_HEIGHT;
+pub const CREDITS_FRAME_WIDTH: i32 = INNER_WIN_WIDTH;
+pub const CREDITS_FRAME_HEIGHT: i32 = 20;
+pub const CREDITS_FRAME_LABEL_SIZE: i32 = 14;
 
 
 // Text display constants
@@ -168,14 +181,21 @@ pub const DONE_MID_FRAME_LABEL: &str = concat!(
     "Monika After Story has been successfully\n",
     "installed on your computer"
 );
+pub const CREDITS_FRAME_LABEL: &str = "Installer theme by MyNewSoundtrack";
 
 
 // Define images
-lazy_static::lazy_static! {
-    pub static ref VOLUME_BUT_IMG: Mutex<PngImage> = Mutex::new(
-        PngImage::from_data(crate::static_data::VOLUME_BUT_DATA).unwrap()
+lazy_static! {
+    pub static ref VOLUME_BUT_CHECK_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_CHECK_DATA).unwrap()
     );
-    pub static ref VOLUME_BUT_HOVER_IMG: Mutex<PngImage> = Mutex::new(
-        PngImage::from_data(crate::static_data::VOLUME_BUT_HOVER_DATA).unwrap()
+    pub static ref VOLUME_BUT_CHECK_HOVER_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_CHECK_HOVER_DATA).unwrap()
+    );
+    pub static ref VOLUME_BUT_UNCHECK_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_UNCHECK_DATA).unwrap()
+    );
+    pub static ref VOLUME_BUT_UNCHECK_HOVER_IMG: Mutex<PngImage> = Mutex::new(
+        PngImage::from_data(crate::static_data::VOLUME_BUT_UNCHECK_HOVER_DATA).unwrap()
     );
 }

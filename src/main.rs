@@ -4,11 +4,17 @@
 mod app;
 mod audio;
 mod errors;
+mod installer;
 mod static_data;
 mod utils;
 
 
-use errors::InstallerError;
+use std::collections::HashMap;
+
+use regex::Regex;
+use lazy_static::lazy_static;
+use reqwest::header::{self, HeaderValue, HeaderMap};
+use const_format;
 
 
 // Get version from the cargo
@@ -19,35 +25,30 @@ const DEF_VERSION: &str = "unknown build";
 const ORG_NAME: &str = "Monika-After-Story";
 const REPO_NAME: &str = "MonikaModDev";
 
-// IDs of assets in github release
-const DEF_VERSION_ASSET_ID: usize = 1;
-const DLX_VERSION_ASSET_ID: usize = 0;
-const SPR_ASSET_ID: usize = 3;
+const CREDITS_URL: &str = "https://www.youtube.com/user/MyNewSoundtrack";
+const CHANGELOG_URL: &str = const_format::formatcp!("https://github.com/{ORG_NAME}/{REPO_NAME}/releases/latest");
 
 
-#[derive(Clone, Copy)]
-pub enum Message {
-    UpdateProgressBar(f64),
-    Close,
-    NextPage,
-    PrevPage,
-    SelectDir,
-    DlxVersionCheck,
-    InstallSprCheck,
-    VolumeCheck,
-    Install,
-    Preparing,
-    Downloading,
-    Extracting,
-    DownloadingSpr,
-    ExtractingSpr,
-    CleaningUp,
-    Error,
-    Abort,
-    Done
+lazy_static! {
+    /// The map of regex patterns for the release assets
+    pub static ref ASSETS_NAMES_RE_MAP: HashMap<&'static str, Regex> = {
+        let mut hm = HashMap::new();
+        hm.insert("def_ver", Regex::new(r"^Monika_After_Story-\d+\.\d+\.\d+-Mod\.zip$").unwrap());
+        hm.insert("dlx_ver", Regex::new(r"^Monika_After_Story-\d+\.\d+\.\d+-Mod-Dlx\.zip$").unwrap());
+        hm.insert("spr", Regex::new(r"^spritepacks\.zip$").unwrap());
+        hm
+    };
+
+    /// The headers we use to access GH API
+    pub static ref HEADERS: HeaderMap = {
+        let mut h = HeaderMap::new();
+        h.insert(header::USER_AGENT, HeaderValue::from_static("Monika After Story Installer"));
+        h.insert(header::ACCEPT_CHARSET, HeaderValue::from_static("utf8"));
+        h.insert(header::ACCEPT_LANGUAGE, HeaderValue::from_static("en-US"));
+        h.insert(header::CONTENT_LANGUAGE, HeaderValue::from_static("en-US"));
+        h
+    };
 }
-
-type InstallResult = Result<(), InstallerError>;
 
 
 /// The entry point
@@ -60,4 +61,6 @@ fn main() {
     app.show();
     // Process events
     app.wait();
+    // Explicitly drop
+    drop(app);
 }

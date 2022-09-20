@@ -12,9 +12,12 @@ pub static APP_LICENSE: &'static str = "You can find the license at https://gith
 // Images
 pub static VERTICAL_BAR_DATA: &'static [u8] = include_bytes!("static/vertical_bar.png");
 pub static VERTICAL_THUMB_DATA: &'static [u8] = include_bytes!("static/vertical_thumb.png");
-pub static VOLUME_BUT_DATA: &'static [u8] = include_bytes!("static/but_volume.png");
-pub static VOLUME_BUT_HOVER_DATA: &'static [u8] = include_bytes!("static/but_volume_hover.png");
+pub static VOLUME_BUT_CHECK_DATA: &'static [u8] = include_bytes!("static/but_volume_check.png");
+pub static VOLUME_BUT_CHECK_HOVER_DATA: &'static [u8] = include_bytes!("static/but_volume_check_hover.png");
+pub static VOLUME_BUT_UNCHECK_DATA: &'static [u8] = include_bytes!("static/but_volume_uncheck.png");
+pub static VOLUME_BUT_UNCHECK_HOVER_DATA: &'static [u8] = include_bytes!("static/but_volume_uncheck_hover.png");
 
 // Sounds
-// Credits: Ludum Dare 28 - Tracks 1 and 3 by @ben_burnes http://abstractionmusic.bandcamp.com/
-pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/ludum_dare_28_track_1.ogg");
+// Credits: Doki Doki Literature Club - Main Theme (Your Reality) (8-bit Remix)
+// by MyNewSoundtrack https://www.youtube.com/user/MyNewSoundtrack
+pub static INSTALLER_THEME_DATA: &'static [u8] = include_bytes!("static/installer_theme.ogg");

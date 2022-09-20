@@ -1,11 +1,12 @@
 /// The module that implements our app
 
 pub mod builder;
+pub mod dialog;
 pub mod state;
 pub mod styles;
 
 
-use std::{thread, mem, path::PathBuf};
+use std::{thread, path::PathBuf};
 
 use fltk::{
     app::{
@@ -22,15 +23,42 @@ use fltk::{
     },
     window::DoubleWindow
 };
+use webbrowser;
 
 use state::{ThreadSafeState, build_thread_safe_state};
-use crate::{Message, InstallResult};
-use super::{audio, utils, errors};
-use errors::InstallerError;
+use super::{audio, errors, installer, utils};
+use errors::InstallError;
+
+
+/// The message enum so different parts of the app can communicate
+#[derive(Clone, Copy)]
+pub enum Message {
+    UpdateProgressBar(f64),
+    Close,
+    NextPage,
+    PrevPage,
+    SelectDir,
+    DlxVersionCheck,
+    InstallSprCheck,
+    VolumeCheck,
+    Install,
+    Preparing,
+    Downloading,
+    Extracting,
+    DownloadingSpr,
+    ExtractingSpr,
+    CleaningUp,
+    Error,
+    Abort,
+    Done,
+    OpenCredits,
+    OpenChangelog
+}
 
 
 /// A struct representing our app
 pub struct InstallerApp {
+    // fltk manages GUI
     inner: fltkApp,
     // The app state
     state: ThreadSafeState,
@@ -54,7 +82,7 @@ pub struct InstallerApp {
     audio_manager: Option<audio::AudioManager>,
 
     // Handle to the installer thread, option because we might not start it/close early
-    installer_th_handle: Option<thread::JoinHandle<InstallResult>>,
+    installer_th_handle: Option<thread::JoinHandle<installer::InstallResult>>,
 
     // These need to be updated
     path_txt_buf: TextBuffer,
@@ -79,11 +107,11 @@ impl InstallerApp {
             let is_dlx_version = s.get_deluxe_ver_flag();
             let install_spr = s.get_install_spr_flag();
             [
-                builder::build_welcome_win(sender),
-                builder::build_license_win(sender),
-                builder::build_select_dir_win(sender, path_txt_buf.clone()),
-                builder::build_options_win(sender, is_dlx_version, install_spr),
-                builder::build_propgress_win(sender, &progress_bar)
+                builder::build_welcome_win(sender, &state),
+                builder::build_license_win(sender, &state),
+                builder::build_select_dir_win(sender, &state, path_txt_buf.clone()),
+                builder::build_options_win(sender, &state, is_dlx_version, install_spr),
+                builder::build_propgress_win(sender, &state, &progress_bar)
             ]
         };
 
@@ -144,9 +172,9 @@ impl InstallerApp {
                         self.show_previous_window();
                     },
                     Message::SelectDir => {
-                        let selected_dir = utils::run_select_dir_dlg(styles::SEL_DIR_DLG_PROMPT);
+                        let selected_dir = dialog::run_select_dir_dlg(styles::SEL_DIR_DLG_PROMPT);
                         if !utils::is_valid_ddlc_dir(&selected_dir) {
-                            utils::run_msg_dlg("Attention!\nSelected directory doesn't appear to be\na valid DDLC directory");
+                            dialog::run_msg_dlg("Attention!\nSelected directory doesn't appear to be\na valid DDLC directory");
                         }
                         self.set_extraction_dir(selected_dir);
                     },
@@ -168,21 +196,26 @@ impl InstallerApp {
                     }
                     Message::VolumeCheck => {
                         if let Some(ref am) = self.audio_manager {
-                            if am.get_volume() == 0.0{
+                            let mut app_state = self.state.lock().unwrap();
+                            if am.get_volume() == 0.0 {
                                 am.set_volume(1.0);
+                                app_state.set_music_volume(1.0);
                                 println!("Audio unmuted...")
                             }
                             else {
                                 am.set_volume(0.0);
+                                app_state.set_music_volume(0.0);
                                 println!("Audio muted...")
                             }
+                            drop(app_state);
+                            self.redraw_current_window();
                         }
                     }
                     Message::Install => {
                         let app_state = self.state.lock().unwrap();
                         // We warn the user again if the extraction dir looks wrong
                         if !utils::is_valid_ddlc_dir(app_state.get_extraction_dir()) {
-                            utils::run_msg_dlg("Attention!\nInstalling into a non-DDLC directory");
+                            dialog::run_msg_dlg("Attention!\nInstalling into a non-DDLC directory");
                         }
                         // We also need to move to the next window
                         self.sender.send(Message::NextPage);
@@ -192,7 +225,7 @@ impl InstallerApp {
                         self.cleanup_th_handle();
                         // Start a new thread
                         self.installer_th_handle = Some(
-                            utils::install_game_in_thread(self.sender, &self.state)
+                            installer::install_game_in_thread(self.sender, &self.state)
                         );
                     },
                     Message::Preparing => {
@@ -225,7 +258,7 @@ impl InstallerApp {
                         let rv = self.cleanup_th_handle();
                         // Show the error if we can
                         if let Some(e) = rv {
-                            utils::run_alert_dlg(&format!("{e}"));
+                            dialog::run_alert_dlg(&format!("{e}"));
                         }
                         // Let's just quit
                         self.sender.send(Message::Close);
@@ -239,8 +272,19 @@ impl InstallerApp {
                     },
                     Message::Done => {
                         println!("Done!\nInstallation is complete!");
+                        self.abort_installation();
                         self.hide_current_window();
                         self.done_window.show();
+                    },
+                    Message::OpenCredits => {
+                        if let Err(e) = webbrowser::open(crate::CREDITS_URL) {
+                            eprintln!("Failed to open browser {e}");
+                        };
+                    },
+                    Message::OpenChangelog => {
+                        if let Err(e) = webbrowser::open(crate::CHANGELOG_URL) {
+                            eprintln!("Failed to open browser {e}");
+                        };
                     }
                 };
             }
@@ -270,6 +314,11 @@ impl InstallerApp {
         self.linked_windows[self.current_window_id].show();
     }
 
+    /// Redraws current window
+    pub fn redraw_current_window(&mut self) {
+        self.linked_windows[self.current_window_id].redraw();
+    }
+
     /// Hides current and shows next (current id + 1) window
     pub fn show_next_window(&mut self) {
         self.change_window(self.current_window_id + 1);
@@ -285,17 +334,11 @@ impl InstallerApp {
     }
 
     /// Joins the installer thread handle
-    fn cleanup_th_handle(&mut self) -> Option<InstallerError> {
-        // I couldn't find a way to join a thread behind a "mut self reference"
-        // This *should* work, but it doesn't:
-        //      self.installer_th_handle.unwrap().join();
-        //      self.installer_th_handle = None;
-        // We can do a trick tho: move the handle to a new variable and put None into the old variable using mem::replace
-        // Technically that is what I'd do in the example above too,
-        // but I guess the compiler can't understand it
-        let th_handle = mem::replace(&mut self.installer_th_handle, None);
-
-        if let Some(th_handle) = th_handle {
+    /// Returns an optional error if the install thread failed
+    fn cleanup_th_handle(&mut self) -> Option<InstallError> {
+        // Rust doesn't allow to have "empty" struct fields, even if we know it's safe
+        // so use .take() to replace the value with None
+        if let Some(th_handle) = self.installer_th_handle.take() {
             match th_handle.join() {
                 Ok(rv) => {
                     if let Err(e) = rv {
@@ -340,8 +383,7 @@ impl Drop for InstallerApp {
         self.abort_installation();
         self.cleanup_th_handle();
         // Stop the music, cleanup memory
-        let am = mem::replace(&mut self.audio_manager, None);
-        if let Some(am) = am {
+        if let Some(am) = self.audio_manager.take() {
             am.stop();
         }
         // Stop the app
