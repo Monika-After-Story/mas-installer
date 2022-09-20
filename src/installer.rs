@@ -1,6 +1,7 @@
 /// The module that implements installer logic for IO handling
 
 use std::{
+    env,
     path::Path,
     fs::{File, create_dir_all, read_dir, remove_file, remove_dir_all},
     io,
@@ -430,7 +431,10 @@ pub fn install_game(
         true => data.dlx_ver_asset,
         false => data.def_ver_asset
     };
-    let destination = app_state.lock().unwrap().get_extraction_dir().clone();
+    let mut destination = app_state.lock().unwrap().get_extraction_dir().clone();
+    if env::consts::OS == "macos" {
+        destination.push("Contents/Resources/autorun");
+    }
 
     sender.send(Message::UpdateProgressBar(0.5));
     sleep();
