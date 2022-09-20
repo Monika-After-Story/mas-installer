@@ -432,6 +432,8 @@ pub fn install_game(
         false => data.def_ver_asset
     };
     let mut destination = app_state.lock().unwrap().get_extraction_dir().clone();
+    // Since mac is pain, we have to adjust the destination to be
+    // within the app
     if env::consts::OS == "macos" {
         destination.push("Contents/Resources/autorun");
     }
@@ -483,6 +485,14 @@ pub fn install_game(
     if !app_state.lock().unwrap().get_install_spr_flag() {
         cleanup(sender, mas_temp_file, spr_temp_file);
         return Ok(());
+    }
+
+    // We don't want to add spritepacks inside the app, so find the parent dir
+    // and extract there
+    if env::consts::OS == "macos" {
+        for _ in 0..4 {
+            destination.pop();
+        }
     }
 
     // Install spritepacks
