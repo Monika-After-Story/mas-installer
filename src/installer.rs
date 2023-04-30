@@ -102,7 +102,7 @@ impl GHRelease {
         return {
             !self.tag_name.is_empty()
             && !self.name.is_empty()
-            && !self.assets.len() != 0
+            && self.assets.len() != 0
         };
     }
 }
