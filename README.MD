@@ -24,6 +24,11 @@ Installer theme by [MyNewSoundtrack](https://www.youtube.com/user/MyNewSoundtrac
 - Rust 1.62 (can build >= 1.59)
 - FLTK 1.3
 
+### Structure:
+- [`src/static_data.rs`](./src/static_data.rs) - app assets definition (icons, backgrounds, etc), they are backed into the executables
+- [`src/app/styles.rs`](./src/app/styles.rs) - app styles (various constants, positions, label text, etc)
+- Errors messages are hardcoded in the places they are raised (for now anyway)
+
 ### Building from Source:
 - Building is straightforward using [`cargo`](https://github.com/rust-lang/cargo/)
 - - Linux: you might need to install some dependencies (check [this workflow](https://github.com/Monika-After-Story/mas-installer/blob/master/.github/workflows/build.yml) for more details)

@@ -39,6 +39,7 @@ impl AudioManager {
         return Self { stream, handle, sink }
     }
 
+    // FIXME: Impl Default (if possible, we're returning Result here)
     pub fn new_default() -> Result<Self, AudioError> {
         let (stream, handle) = OutputStream::try_default()?;
         let sink = Sink::try_new(&handle)?;
@@ -81,6 +82,7 @@ impl AudioManager {
     }
 
     /// Stops the music and clears memory
+    /// TODO: Impl Drop
     pub fn stop(self) {
         drop(self);
     }

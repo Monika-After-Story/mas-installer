@@ -174,6 +174,7 @@ impl InstallerApp {
                     Message::SelectDir => {
                         let selected_dir = dialog::run_select_dir_dlg(styles::SEL_DIR_DLG_PROMPT);
                         if !utils::is_valid_ddlc_dir(&selected_dir) {
+                            // FIXME: move dlg msg to styles
                             dialog::run_msg_dlg("Attention!\nSelected directory doesn't appear to be\na valid DDLC directory");
                         }
                         self.set_extraction_dir(selected_dir);
@@ -215,6 +216,7 @@ impl InstallerApp {
                         let app_state = self.state.lock().unwrap();
                         // We warn the user again if the extraction dir looks wrong
                         if !utils::is_valid_ddlc_dir(app_state.get_extraction_dir()) {
+                            // FIXME: move dlg msg to styles
                             dialog::run_msg_dlg("Attention!\nInstalling into a non-DDLC directory");
                         }
                         // We also need to move to the next window
@@ -230,26 +232,32 @@ impl InstallerApp {
                     },
                     Message::Preparing => {
                         println!("Preparing...");
+                        // FIXME: move progress bar txt to styles
                         self.progress_bar.set_label("Preparing...");
                     },
                     Message::Downloading => {
                         println!("Done!\nDownloading...");
+                        // FIXME: move progress bar txt to styles
                         self.progress_bar.set_label("Downloading...");
                     },
                     Message::Extracting => {
                         println!("Done!\nExtracting...");
+                        // FIXME: move progress bar txt to styles
                         self.progress_bar.set_label("Extracting...");
                     },
                     Message::DownloadingSpr => {
                         println!("Done!\nDownloading spritepacks...");
+                        // FIXME: move progress bar txt to styles
                         self.progress_bar.set_label("Downloading spritepacks...");
                     },
                     Message::ExtractingSpr => {
                         println!("Done!\nExtracting spritepacks...");
+                        // FIXME: move progress bar txt to styles
                         self.progress_bar.set_label("Extracting spritepacks...");
                     },
                     Message::CleaningUp => {
                         println!("Done!\nCleaning up...");
+                        // FIXME: move progress bar txt to styles
                         self.progress_bar.set_label("Cleaning up...");
                     },
                     Message::Error => {

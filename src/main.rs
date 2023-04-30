@@ -21,7 +21,7 @@ use const_format;
 const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 const DEF_VERSION: &str = "unknown build";
 
-// GH link parts to accept the API
+// GH link parts to access the API
 const ORG_NAME: &str = "Monika-After-Story";
 const REPO_NAME: &str = "MonikaModDev";
 
