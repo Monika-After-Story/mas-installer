@@ -82,7 +82,6 @@ impl AudioManager {
     }
 
     /// Stops the music and clears memory
-    /// TODO: Impl Drop
     pub fn stop(self) {
         drop(self);
     }
