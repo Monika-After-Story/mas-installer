@@ -238,7 +238,7 @@ impl InstallerApp {
                     },
                     Message::Extracting => {
                         println!("Done!\nExtracting...");
-                        self.progress_bar.set_label(styles::PB_LABEL_DOWNLOADING_GAME);
+                        self.progress_bar.set_label(styles::PB_LABEL_EXTRACTING_GAME);
                     },
                     Message::DownloadingSpr => {
                         println!("Done!\nDownloading spritepacks...");
