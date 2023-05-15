@@ -129,9 +129,22 @@ pub const LABEL_SIZE_LARGE: i32 = 28;
 pub const LABEL_SIZE_MED: i32 = 20;
 
 
+// Dialogue consts
+pub const DLG_MSG_SELECTED_BAD_DIR: &str = "Attention!\nSelected directory doesn't appear to be\na valid DDLC directory";
+pub const DLG_MSG_INSTALLING_IN_BAD_DIR: &str = "Attention!\nInstalling into a non-DDLC directory";
+
+
 // Progress bar consts
 pub const PB_WIDTH: i32 = INNER_WIN_WIDTH - 2*INNER_WIN_CONTENT_XPADDING;
 pub const PB_HEIGHT: i32 = BUT_HEIGHT;
+
+// msgs
+pub const PB_LABEL_PREPARING: &str = "Preparing...";
+pub const PB_LABEL_DOWNLOADING_GAME: &str = "Downloading...";
+pub const PB_LABEL_EXTRACTING_GAME: &str = "Extracting...";
+pub const PB_LABEL_DOWNLOADING_SPRITEPACKS: &str = "Downloading spritepacks...";
+pub const PB_LABEL_EXTRACTING_SPRITEPACKS: &str = "Extracting spritepacks...";
+pub const PB_LABEL_CLEANINGUP: &str = "Cleaning up...";
 
 
 // Slider consts

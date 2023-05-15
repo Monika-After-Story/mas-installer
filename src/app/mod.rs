@@ -174,8 +174,7 @@ impl InstallerApp {
                     Message::SelectDir => {
                         let selected_dir = dialog::run_select_dir_dlg(styles::SEL_DIR_DLG_PROMPT);
                         if !utils::is_valid_ddlc_dir(&selected_dir) {
-                            // FIXME: move dlg msg to styles
-                            dialog::run_msg_dlg("Attention!\nSelected directory doesn't appear to be\na valid DDLC directory");
+                            dialog::run_msg_dlg(styles::DLG_MSG_SELECTED_BAD_DIR);
                         }
                         self.set_extraction_dir(selected_dir);
                     },
@@ -216,8 +215,7 @@ impl InstallerApp {
                         let app_state = self.state.lock().unwrap();
                         // We warn the user again if the extraction dir looks wrong
                         if !utils::is_valid_ddlc_dir(app_state.get_extraction_dir()) {
-                            // FIXME: move dlg msg to styles
-                            dialog::run_msg_dlg("Attention!\nInstalling into a non-DDLC directory");
+                            dialog::run_msg_dlg(styles::DLG_MSG_INSTALLING_IN_BAD_DIR);
                         }
                         // We also need to move to the next window
                         self.sender.send(Message::NextPage);
@@ -232,33 +230,27 @@ impl InstallerApp {
                     },
                     Message::Preparing => {
                         println!("Preparing...");
-                        // FIXME: move progress bar txt to styles
-                        self.progress_bar.set_label("Preparing...");
+                        self.progress_bar.set_label(styles::PB_LABEL_PREPARING);
                     },
                     Message::Downloading => {
                         println!("Done!\nDownloading...");
-                        // FIXME: move progress bar txt to styles
-                        self.progress_bar.set_label("Downloading...");
+                        self.progress_bar.set_label(styles::PB_LABEL_DOWNLOADING_GAME);
                     },
                     Message::Extracting => {
                         println!("Done!\nExtracting...");
-                        // FIXME: move progress bar txt to styles
-                        self.progress_bar.set_label("Extracting...");
+                        self.progress_bar.set_label(styles::PB_LABEL_DOWNLOADING_GAME);
                     },
                     Message::DownloadingSpr => {
                         println!("Done!\nDownloading spritepacks...");
-                        // FIXME: move progress bar txt to styles
-                        self.progress_bar.set_label("Downloading spritepacks...");
+                        self.progress_bar.set_label(styles::PB_LABEL_DOWNLOADING_SPRITEPACKS);
                     },
                     Message::ExtractingSpr => {
                         println!("Done!\nExtracting spritepacks...");
-                        // FIXME: move progress bar txt to styles
-                        self.progress_bar.set_label("Extracting spritepacks...");
+                        self.progress_bar.set_label(styles::PB_LABEL_EXTRACTING_SPRITEPACKS);
                     },
                     Message::CleaningUp => {
                         println!("Done!\nCleaning up...");
-                        // FIXME: move progress bar txt to styles
-                        self.progress_bar.set_label("Cleaning up...");
+                        self.progress_bar.set_label(styles::PB_LABEL_CLEANINGUP);
                     },
                     Message::Error => {
                         println!("An error has occurred...");
