@@ -39,8 +39,8 @@ impl AudioManager {
         return Self { stream, handle, sink }
     }
 
-    // FIXME: Impl Default (if possible, we're returning Result here)
-    pub fn new_default() -> Result<Self, AudioError> {
+    // NOTE: There seems to be no Default for Result, so here's a little work around
+    pub fn try_default() -> Result<Self, AudioError> {
         let (stream, handle) = OutputStream::try_default()?;
         let sink = Sink::try_new(&handle)?;
         return Ok(
@@ -121,7 +121,7 @@ fn get_source_from_raw(data: RawData) -> Result<Sauce, AudioError> {
 /// Starts playing the main theme
 /// To stop the audio, use AudioManager.stop()
 pub fn play_theme() -> Result<AudioManager, AudioError> {
-    let manager = AudioManager::new_default()?;
+    let manager = AudioManager::try_default()?;
     manager.append_raw(static_data::INSTALLER_THEME_DATA, true)?;
 
     return Ok(manager);
